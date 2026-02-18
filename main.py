@@ -194,7 +194,10 @@ async def _parse_pdf_to_prompt(file_bytes: bytes, filename: str) -> str:
 
 @app.get("/", tags=["Health"])
 async def root():
-    """Health check — returns service name, version, and docs URL."""
+    """Serves the frontend if built, otherwise returns health check JSON."""
+    index = Path(__file__).parent / "dist" / "index.html"
+    if index.exists():
+        return FileResponse(index)
     return {
         "service": "LexTimeline API",
         "version": APP_VERSION,
