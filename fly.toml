@@ -1,0 +1,16 @@
+app = "lextimeline"
+primary_region = "ams"  # Amsterdam — Türkiye'ye en yakın ücretsiz bölge
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false   # ← sleep yok, her zaman açık
+  auto_start_machines = true
+  min_machines_running = 1     # ← en az 1 VM her zaman ayakta
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

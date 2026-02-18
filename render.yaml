@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: lextimeline
+    runtime: docker
+    plan: free
+    envVars:
+      - key: AZURE_OPENAI_API_KEY
+        sync: false
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
+      - key: AZURE_OPENAI_DEPLOYMENT_NAME
+        sync: false
+      - key: AZURE_OPENAI_API_VERSION
+        sync: false
