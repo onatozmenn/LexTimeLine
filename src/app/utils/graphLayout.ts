@@ -9,7 +9,7 @@
  * EventNode / EntityNode components in GraphView.tsx.
  */
 
-import * as dagre from "@dagrejs/dagre";
+import dagre from "@dagrejs/dagre";
 import type { Edge, Node } from "@xyflow/react";
 
 // ── Fixed node dimensions (px) ───────────────────────────────────────────────
