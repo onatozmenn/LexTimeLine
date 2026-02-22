@@ -1,32 +1,23 @@
----
-title: LexTimeline
-emoji: ⚖️
-colorFrom: blue
-colorTo: purple
-sdk: docker
-pinned: false
----
-
-# ⚖️ LexTimeLine
+# LexTimeLine
 
 **LexTimeLine** is an AI-powered legal document analysis tool that transforms Turkish legal PDFs into interactive, structured timelines — and automatically detects contradictions between events. It also includes a RAG-lite chat assistant so you can ask natural-language questions about a case directly from the analyzed document.
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
-| 📄 **PDF Upload** | Drag-and-drop or click-to-upload any Turkish legal PDF (up to 50 MB) |
-| 🗂️ **Timeline Extraction** | AI extracts every date-bound legal event into a clean, ordered timeline |
-| ⚡ **Contradiction Detection** | Automatically identifies logical conflicts between timeline events |
-| 💬 **Case Chat Assistant** | Ask natural-language questions about the case; get cited, grounded answers |
-| 🌙 **Dark / Light Mode** | Fully themeable interface with persisted user preference |
-| 🐳 **Docker Ready** | Single-image deployment via the included `Dockerfile` |
+| **PDF Upload** | Drag-and-drop or click-to-upload any Turkish legal PDF (up to 50 MB) |
+| **Timeline Extraction** | AI extracts every date-bound legal event into a clean, ordered timeline |
+| **Contradiction Detection** | Automatically identifies logical conflicts between timeline events |
+| **Case Chat Assistant** | Ask natural-language questions about the case; get cited, grounded answers |
+| **Dark / Light Mode** | Fully themeable interface with persisted user preference |
+| **Docker Ready** | Single-image deployment via the included `Dockerfile` |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────┐      ┌──────────────────────────────────────┐
@@ -52,7 +43,7 @@ pinned: false
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -102,7 +93,7 @@ API docs are available at [http://localhost:8000/docs](http://localhost:8000/doc
 
 ---
 
-## 🐳 Docker
+## Docker
 
 ```bash
 # Build
@@ -116,7 +107,7 @@ The container serves the pre-built React app as static files from the FastAPI pr
 
 ---
 
-## ☁️ Deployment
+## Deployment
 
 The repository includes ready-to-use configuration for two platforms:
 
@@ -129,7 +120,7 @@ Set the environment variables listed above as secrets/env vars in your chosen pl
 
 ---
 
-## 📡 API Reference
+## API Reference
 
 ### `POST /analyze`
 Upload a PDF and receive a structured timeline (Phase 1 only — faster).
@@ -151,7 +142,7 @@ Ask a natural-language question about a previously analyzed case.
 
 ---
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 ├── main.py                   # FastAPI app entry point
@@ -177,7 +168,7 @@ Ask a natural-language question about a previously analyzed case.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lucide Icons  
 **Backend:** FastAPI, Uvicorn, Pydantic v2, PyMuPDF, OpenAI Python SDK  
@@ -186,7 +177,7 @@ Ask a natural-language question about a previously analyzed case.
 
 ---
 
-## 📝 License
+## License
 
 This project is provided as-is for educational and demonstration purposes.  
 See [ATTRIBUTIONS.md](ATTRIBUTIONS.md) for third-party library attributions.
