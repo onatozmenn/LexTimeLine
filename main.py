@@ -9,8 +9,8 @@ API Docs:
     http://localhost:8000/redoc  (ReDoc)
 
 Endpoints:
-    POST /analyze        â€” Phase 1 only: PDF â†’ structured timeline (fast)
-    POST /analyze/deep   â€” Phase 1 + 2: PDF â†’ timeline + contradiction analysis
+    POST /analyze        — Phase 1 only: PDF → structured timeline (fast)
+    POST /analyze/deep   — Phase 1 + 2: PDF → timeline + contradiction analysis
 """
 
 import logging
@@ -58,7 +58,7 @@ APP_VERSION = "1.1.0"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("LexTimeline v%s starting upâ€¦", APP_VERSION)
+    logger.info("LexTimeline v%s starting up…", APP_VERSION)
     yield
     logger.info("LexTimeline shutting down. Goodbye.")
 
@@ -70,10 +70,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="LexTimeline API",
     description=(
-        "## LexTimeline â€” Legal Document Intelligence\n\n"
+        "## LexTimeline — Legal Document Intelligence\n\n"
         "Upload a legal PDF and get back:\n\n"
-        "- **`/analyze`** â€” A structured, chronological timeline of all date-bound legal events.\n"
-        "- **`/analyze/deep`** â€” Everything above **plus** an AI-powered contradiction analysis "
+        "- **`/analyze`** — A structured, chronological timeline of all date-bound legal events.\n"
+        "- **`/analyze/deep`** — Everything above **plus** an AI-powered contradiction analysis "
         "that cross-references events to detect factual errors, witness conflicts, timeline "
         "impossibilities, and missing information.\n\n"
         "Designed for Turkish legal proceedings (HMK, TBK, CMK) but works with any jurisdiction."
@@ -107,7 +107,7 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     elapsed_ms = (time.perf_counter() - start) * 1000
     logger.info(
-        "%s %s â†’ %d  (%.1f ms)",
+        "%s %s → %d  (%.1f ms)",
         request.method,
         request.url.path,
         response.status_code,
@@ -222,7 +222,7 @@ async def health_check():
 
 
 # ---------------------------------------------------------------------------
-# Route: Phase 1 â€” Timeline extraction only
+# Route: Phase 1 — Timeline extraction only
 # ---------------------------------------------------------------------------
 
 @app.post(
@@ -235,7 +235,7 @@ async def health_check():
         "then sends the text to GPT-4.1 to produce a structured, chronological list of "
         "all date-bound legal events.\n\n"
         "For the full experience including contradiction detection, use `POST /analyze/deep`.\n\n"
-        "**Performance:** ~10â€“20s for a 20-page document."
+        "**Performance:** ~10–20s for a 20-page document."
     ),
     tags=["Analysis"],
     responses={
@@ -251,7 +251,7 @@ async def analyze_document(
 ) -> TimelineResponse:
     """
     Phase 1 pipeline:
-      PDF bytes â†’ PyMuPDF text extraction â†’ GPT-4.1 Structured Output â†’ TimelineResponse
+      PDF bytes → PyMuPDF text extraction → GPT-4.1 Structured Output → TimelineResponse
     """
     file_bytes = await _validate_and_read_pdf(file)
     logger.info("'/analyze' received '%s' (%.2f MB).", file.filename, len(file_bytes) / 1e6)
@@ -274,7 +274,7 @@ async def analyze_document(
 
 
 # ---------------------------------------------------------------------------
-# Route: Phase 1 + 2 â€” Deep analysis (timeline + contradiction detection)
+# Route: Phase 1 + 2 — Deep analysis (timeline + contradiction detection)
 # ---------------------------------------------------------------------------
 
 @app.post(
@@ -285,21 +285,21 @@ async def analyze_document(
     description=(
         "**The full LexTimeline pipeline.** Performs Phase 1 (timeline extraction) "
         "followed by Phase 2 (The Contradiction Detective).\n\n"
-        "### Phase 2 â€” What it detects:\n"
-        "- **FACTUAL_ERROR** â€” Numeric/factual inconsistencies between events "
+        "### Phase 2 — What it detects:\n"
+        "- **FACTUAL_ERROR** — Numeric/factual inconsistencies between events "
         "(e.g., mismatched monetary amounts).\n"
-        "- **WITNESS_CONFLICT** â€” Irreconcilable testimony conflicts, including "
-        "*Ã‡eliÅŸkili Beyan* and *Tevil Yollu Ä°krar* patterns.\n"
-        "- **TIMELINE_IMPOSSIBILITY** â€” Physical/procedural impossibilities such as "
+        "- **WITNESS_CONFLICT** — Irreconcilable testimony conflicts, including "
+        "*Çelişkili Beyan* and *Tevil Yollu İkrar* patterns.\n"
+        "- **TIMELINE_IMPOSSIBILITY** — Physical/procedural impossibilities such as "
         "being in two cities at once, or acting before a legal prerequisite is met.\n"
-        "- **MISSING_INFO** â€” Critical information gaps that may affect the case outcome.\n\n"
+        "- **MISSING_INFO** — Critical information gaps that may affect the case outcome.\n\n"
         "Each contradiction includes a **severity** (HIGH/MEDIUM/LOW), a **confidence score** "
-        "(0â€“1), the relevant **Turkish legal basis**, and a **recommended action** for counsel.\n\n"
-        "**Performance:** ~25â€“45s for a 20-page document (two sequential LLM calls)."
+        "(0–1), the relevant **Turkish legal basis**, and a **recommended action** for counsel.\n\n"
+        "**Performance:** ~25–45s for a 20-page document (two sequential LLM calls)."
     ),
     tags=["Analysis"],
     responses={
-        200: {"description": "Full analysis complete â€” timeline + contradictions returned."},
+        200: {"description": "Full analysis complete — timeline + contradictions returned."},
         400: {"description": "Invalid file type or empty file."},
         413: {"description": "File exceeds 50 MB limit."},
         422: {"description": "PDF parsing or LLM validation error."},
@@ -312,15 +312,15 @@ async def analyze_document_deep(
     """
     Full pipeline (3 sequential steps):
 
-      1. PDF bytes  â†’  PyMuPDF text extraction  (services/pdf_parser.py)
-                              â†“
-      2. Raw text   â†’  GPT-4.1 Structured Outputs  â†’  TimelineResponse
+      1. PDF bytes  →  PyMuPDF text extraction  (services/pdf_parser.py)
+                              ↓
+      2. Raw text   →  GPT-4.1 Structured Outputs  →  TimelineResponse
                        (services/llm_extractor.py)
-                              â†“
-      3. Timeline   â†’  GPT-4.1 Logic Analysis  â†’  LogicAnalysisResult
+                              ↓
+      3. Timeline   →  GPT-4.1 Logic Analysis  →  LogicAnalysisResult
                        (services/logic_analyzer.py)
-                              â†“
-         TimelineResponse + LogicAnalysisResult  â†’  AnalysisResult.from_phases()
+                              ↓
+         TimelineResponse + LogicAnalysisResult  →  AnalysisResult.from_phases()
 
     Steps 2 and 3 are sequential by design: the logic analyzer requires
     the numbered event list produced by step 2.
@@ -328,12 +328,12 @@ async def analyze_document_deep(
     file_bytes = await _validate_and_read_pdf(file)
     logger.info("'/analyze/deep' received '%s' (%.2f MB).", file.filename, len(file_bytes) / 1e6)
 
-    # â”€â”€ Step 1: PDF â†’ text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Step 1: PDF → text ────────────────────────────────────────────────────
     prompt_text = await _parse_pdf_to_prompt(file_bytes, file.filename or "unknown")
 
-    # â”€â”€ Step 2: text â†’ timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Step 2: text → timeline ───────────────────────────────────────────────
     try:
-        logger.info("Step 2/3: Running timeline extractionâ€¦")
+        logger.info("Step 2/3: Running timeline extraction…")
         timeline = await extract_timeline(document_text=prompt_text)
         logger.info(
             "Step 2/3 complete: %d events extracted.",
@@ -348,9 +348,9 @@ async def analyze_document_deep(
             detail="AI service error during timeline extraction. Please retry.",
         ) from exc
 
-    # â”€â”€ Step 3: timeline â†’ contradiction analysis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Step 3: timeline → contradiction analysis ─────────────────────────────
     try:
-        logger.info("Step 3/3: Running contradiction analysis on %d eventsâ€¦", len(timeline.events))
+        logger.info("Step 3/3: Running contradiction analysis on %d events…", len(timeline.events))
         logic_result = await detect_contradictions(timeline=timeline)
         logger.info(
             "Step 3/3 complete: %d contradictions found. Risk level: %s.",
@@ -375,12 +375,12 @@ async def analyze_document_deep(
             total_contradictions_found=0,
             risk_level="NONE",
             analysis_notes=(
-                "Ã‡eliÅŸki analizi bir hata nedeniyle tamamlanamadÄ±. "
-                "Zaman Ã§izelgesi baÅŸarÄ±yla oluÅŸturulmuÅŸtur."
+                "Çelişki analizi bir hata nedeniyle tamamlanamadı. "
+                "Zaman çizelgesi başarıyla oluşturulmuştur."
             ),
         )
 
-    # â”€â”€ Merge and return â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Merge and return ───────────────────────────────────────────────────────
     result = AnalysisResult.from_phases(timeline=timeline, logic=logic_result)
 
     logger.info(
@@ -395,7 +395,7 @@ async def analyze_document_deep(
 
 
 # ---------------------------------------------------------------------------
-# Static files â€” serve the built frontend (dist/) if it exists
+# Static files — serve the built frontend (dist/) if it exists
 # ---------------------------------------------------------------------------
 
 _dist = Path(__file__).parent / "dist"
@@ -407,4 +407,5 @@ if _dist.exists():
         """Catch-all: return index.html for any non-API path (SPA routing)."""
         index = _dist / "index.html"
         return FileResponse(index)
+
 

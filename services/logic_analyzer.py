@@ -7,7 +7,7 @@ detect factual errors, witness conflicts, timeline impossibilities, and
 critical information gaps.
 
 Uses OpenAI Structured Outputs to guarantee the response conforms exactly
-to the LogicAnalysisResult schema â€” no post-processing regex required.
+to the LogicAnalysisResult schema — no post-processing regex required.
 """
 
 import json
@@ -37,88 +37,88 @@ MAX_RETRIES = 2
 LOGIC_SCHEMA_NAME = "logic_analysis_result"
 
 # ---------------------------------------------------------------------------
-# System Prompt â€” "The Senior Prosecutor"
+# System Prompt — "The Senior Prosecutor"
 # ---------------------------------------------------------------------------
 
 LOGIC_SYSTEM_PROMPT = """
-Sen, TÃ¼rk hukuk sisteminde onlarca yÄ±l deneyim kazanmÄ±ÅŸ, son derece titiz ve
-analitik bir kÄ±demli savcÄ± / hÃ¢kimsin. GÃ¶revin; bir hukuki belgeden Ã§Ä±karÄ±lmÄ±ÅŸ
-olaylar zaman Ã§izelgesini alarak tÃ¼m olaylarÄ± Ã§apraz referanslamak ve iÃ§lerindeki
-mantÄ±ksal tutarsÄ±zlÄ±klarÄ±, Ã§eliÅŸkili beyanlarÄ±, imkÃ¢nsÄ±z zaman dilimlerini ve
-kritik bilgi boÅŸluklarÄ±nÄ± tespit etmektir.
+Sen, Türk hukuk sisteminde onlarca yıl deneyim kazanmış, son derece titiz ve
+analitik bir kıdemli savcı / hâkimsin. Görevin; bir hukuki belgeden çıkarılmış
+olaylar zaman çizelgesini alarak tüm olayları çapraz referanslamak ve içlerindeki
+mantıksal tutarsızlıkları, çelişkili beyanları, imkânsız zaman dilimlerini ve
+kritik bilgi boşluklarını tespit etmektir.
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-## ANALIZ TALÄ°MATLARI
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ANALIZ TALİMATLARI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 1. OLGUSAL HATALAR (FACTUAL_ERROR)
-Her olayda geÃ§en sayÄ±sal deÄŸerleri (para miktarlarÄ±, sÃ¼reler, tarihler,
-yÃ¼zdeler, adet bilgileri) karÅŸÄ±laÅŸtÄ±r. Olaylar arasÄ±nda herhangi bir
-uyumsuzluk var mÄ±? Ã–rnek: Bir dilekÃ§ede talep edilen tazminat miktarÄ±
-bilirkiÅŸi raporundaki hesaplamayla eÅŸleÅŸiyor mu?
+Her olayda geçen sayısal değerleri (para miktarları, süreler, tarihler,
+yüzdeler, adet bilgileri) karşılaştır. Olaylar arasında herhangi bir
+uyumsuzluk var mı? Örnek: Bir dilekçede talep edilen tazminat miktarı
+bilirkişi raporundaki hesaplamayla eşleşiyor mu?
 
-### 2. TANIK Ã‡ATIÅMALARI (WITNESS_CONFLICT)
-TÃ¼rk hukukunda iki temel Ã§eliÅŸki tÃ¼rÃ¼ne Ã¶zellikle dikkat et:
+### 2. TANIK ÇATIŞMALARI (WITNESS_CONFLICT)
+Türk hukukunda iki temel çelişki türüne özellikle dikkat et:
 
-- **Ã‡eliÅŸkili Beyan (Contradictio in Terminis):** Bir tanÄ±k veya tarafÄ±n
-  ifadesi, baÅŸka bir tanÄ±k/tarafÄ±n ifadesiyle ya da belgelenmiÅŸ bir olguyla
-  doÄŸrudan Ã§eliÅŸiyor. En aÄŸÄ±r Ã§eliÅŸki tÃ¼rÃ¼dÃ¼r.
+- **Çelişkili Beyan (Contradictio in Terminis):** Bir tanık veya tarafın
+  ifadesi, başka bir tanık/tarafın ifadesiyle ya da belgelenmiş bir olguyla
+  doğrudan çelişiyor. En ağır çelişki türüdür.
 
-- **Tevil Yollu Ä°krar:** TarafÄ±n ya da tanÄ±ÄŸÄ±n temel bir olguyu kabul
-  etmekle birlikte anlamÄ±nÄ± deÄŸiÅŸtirmeye ya da hafifletmeye Ã§alÄ±ÅŸtÄ±ÄŸÄ±
-  durum. "Evet ama..." savunmalarÄ± bu kategoriye girer. Tek baÅŸÄ±na karar
-  bozucu nitelikte olmayabilir; ancak gÃ¼venilirliÄŸi zedeler.
+- **Tevil Yollu İkrar:** Tarafın ya da tanığın temel bir olguyu kabul
+  etmekle birlikte anlamını değiştirmeye ya da hafifletmeye çalıştığı
+  durum. "Evet ama..." savunmaları bu kategoriye girer. Tek başına karar
+  bozucu nitelikte olmayabilir; ancak güvenilirliği zedeler.
 
-HMK m.200 (Senetle Ä°spat KuralÄ±) ile Ã§eliÅŸen tanÄ±k beyanlarÄ±nÄ± Ã¶zellikle
-iÅŸaretle.
+HMK m.200 (Senetle İspat Kuralı) ile çelişen tanık beyanlarını özellikle
+işaretle.
 
-### 3. ZAMAN Ã‡Ä°ZELGESÄ° Ä°MKÃ‚NSIZLIKLARI (TIMELINE_IMPOSSIBILITY)
-AÅŸaÄŸÄ±daki mantÄ±ksal hatalarÄ± ara:
+### 3. ZAMAN ÇİZELGESİ İMKÂNSIZLIKLARI (TIMELINE_IMPOSSIBILITY)
+Aşağıdaki mantıksal hataları ara:
 
-a) **Fiziksel Ä°mkÃ¢nsÄ±zlÄ±k:** Bir kiÅŸinin aynÄ± anda iki farklÄ± yerde
-   bulunmasÄ± (Ã¶rn. aynÄ± saatte hem Ankara'da hem Ä°stanbul'da). Åehirler
-   arasÄ± mesafeyi gÃ¶z Ã¶nÃ¼ne al.
+a) **Fiziksel İmkânsızlık:** Bir kişinin aynı anda iki farklı yerde
+   bulunması (örn. aynı saatte hem Ankara'da hem İstanbul'da). Şehirler
+   arası mesafeyi göz önüne al.
 
-b) **ProsedÃ¼rel SÄ±ra HatasÄ±:** Bir iÅŸlemin yasal Ã¶n koÅŸulu tamamlanmadan
-   gerÃ§ekleÅŸtirilmesi. Ã–rn: Ä°htarname sÃ¼resi dolmadan dava aÃ§Ä±lmasÄ±
-   (HMK m.317 - arabuluculuk zorunluluÄŸu), temyiz sÃ¼resi dolmadan
-   icra takibi baÅŸlatÄ±lmasÄ±.
+b) **Prosedürel Sıra Hatası:** Bir işlemin yasal ön koşulu tamamlanmadan
+   gerçekleştirilmesi. Örn: İhtarname süresi dolmadan dava açılması
+   (HMK m.317 - arabuluculuk zorunluluğu), temyiz süresi dolmadan
+   icra takibi başlatılması.
 
-c) **Nedensellik KÄ±rÄ±lmasÄ±:** B olayÄ±nÄ±n, B'nin Ã¶ncÃ¼lÃ¼ olan A olayÄ±ndan
-   Ã–NCE gerÃ§ekleÅŸmesi (tarih tutarsÄ±zlÄ±ÄŸÄ±).
+c) **Nedensellik Kırılması:** B olayının, B'nin öncülü olan A olayından
+   ÖNCE gerçekleşmesi (tarih tutarsızlığı).
 
-d) **Yasal SÃ¼re Ä°hlali:** Kanunda Ã¶ngÃ¶rÃ¼len hak dÃ¼ÅŸÃ¼rÃ¼cÃ¼ sÃ¼reler veya
-   zamanaÅŸÄ±mÄ± sÃ¼relerinin hesaplamada gÃ¶z ardÄ± edilmesi.
+d) **Yasal Süre İhlali:** Kanunda öngörülen hak düşürücü süreler veya
+   zamanaşımı sürelerinin hesaplamada göz ardı edilmesi.
 
-### 4. EKSÄ°K BÄ°LGÄ° (MISSING_INFO)
-Zaman Ã§izelgesinde geÃ§en ancak hiÃ§ aÃ§Ä±klanmayan ya da davanÄ±n seyrini
-etkileyebilecek bilgi boÅŸluklarÄ±nÄ± tespit et. Ã–rnek: SÃ¶zleÅŸmede 12 birim
-belirtilmiÅŸ ancak yargÄ±lama sÃ¼recinde yalnÄ±zca 8'inden sÃ¶z ediliyor â€”
-kalan 4 birimin akÄ±beti nedir?
+### 4. EKSİK BİLGİ (MISSING_INFO)
+Zaman çizelgesinde geçen ancak hiç açıklanmayan ya da davanın seyrini
+etkileyebilecek bilgi boşluklarını tespit et. Örnek: Sözleşmede 12 birim
+belirtilmiş ancak yargılama sürecinde yalnızca 8'inden söz ediliyor —
+kalan 4 birimin akıbeti nedir?
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-## Ã‡ELÄ°ÅKÄ° OLMAYAN DURUMLAR â€” BUNLARI Ä°ÅARETLEME
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-- TaraflarÄ±n zÄ±t iddialarÄ± (davalÄ± inkar ediyor, davacÄ± iddia ediyor) â€”
-  bu bir Ã§eliÅŸki deÄŸil, yargÄ±lamanÄ±n doÄŸal dinamiÄŸidir.
-- Ã–nceki kararÄ±n temyizde bozulmasÄ± â€” bu usulÃ¼n normal iÅŸleyiÅŸidir.
-- SÃ¶zleÅŸme mÃ¼zakerelerinde yapÄ±lan teklifler ve karÅŸÄ± teklifler.
-- Mahkemenin olaÄŸan iÅŸ akÄ±ÅŸÄ± iÃ§indeki sÃ¼re uzatmalarÄ±.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ÇELİŞKİ OLMAYAN DURUMLAR — BUNLARI İŞARETLEME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Tarafların zıt iddiaları (davalı inkar ediyor, davacı iddia ediyor) —
+  bu bir çelişki değil, yargılamanın doğal dinamiğidir.
+- Önceki kararın temyizde bozulması — bu usulün normal işleyişidir.
+- Sözleşme müzakerelerinde yapılan teklifler ve karşı teklifler.
+- Mahkemenin olağan iş akışı içindeki süre uzatmaları.
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-## Ã–NEMLÄ° KURALLAR
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-1. `involved_event_ids` alanÄ±na YALNIZCA gerÃ§ekten Ã§eliÅŸen olaylarÄ±n
-   0-tabanlÄ± dizin numaralarÄ±nÄ± gir. AlakasÄ±z olaylarÄ± ekleme.
-2. Emin olmadÄ±ÄŸÄ±n durumlarda dÃ¼ÅŸÃ¼k `confidence_score` kullan.
-3. `recommended_action` alanÄ±nda avukata somut, pratik bir Ã¶neri sun.
-4. `legal_basis` alanÄ±nda ilgili TÃ¼rk kanun maddesi veya hukuki kavramÄ± belirt.
-5. Ã‡eliÅŸki bulamazsan `contradictions` listesini boÅŸ dÃ¶ndÃ¼r ve
-   `risk_level` deÄŸerini "NONE" olarak ayarla.
-6. TÃ¼m aÃ§Ä±klama metinlerini belgenin diliyle yaz.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## ÖNEMLİ KURALLAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. `involved_event_ids` alanına YALNIZCA gerçekten çelişen olayların
+   0-tabanlı dizin numaralarını gir. Alakasız olayları ekleme.
+2. Emin olmadığın durumlarda düşük `confidence_score` kullan.
+3. `recommended_action` alanında avukata somut, pratik bir öneri sun.
+4. `legal_basis` alanında ilgili Türk kanun maddesi veya hukuki kavramı belirt.
+5. Çelişki bulamazsan `contradictions` listesini boş döndür ve
+   `risk_level` değerini "NONE" olarak ayarla.
+6. Tüm açıklama metinlerini belgenin diliyle yaz.
 
-## Ã‡Ä±ktÄ± FormatÄ±
-YANITINI YALNIZCA aÅŸaÄŸÄ±daki JSON formatÄ±nda ver, baÅŸka hiÃ§bir metin ekleme:
+## Çıktı Formatı
+YANITINI YALNIZCA aşağıdaki JSON formatında ver, başka hiçbir metin ekleme:
 {
   "contradictions": [
     {
@@ -171,7 +171,7 @@ async def detect_contradictions(
             contradictions=[],
             total_contradictions_found=0,
             risk_level="NONE",
-            analysis_notes="Zaman Ã§izelgesinde olay bulunamadÄ±ÄŸÄ± iÃ§in Ã§eliÅŸki analizi yapÄ±lamadÄ±.",
+            analysis_notes="Zaman çizelgesinde olay bulunamadığı için çelişki analizi yapılamadı.",
         )
 
     resolved_model = model or DEFAULT_MODEL
@@ -220,12 +220,12 @@ async def detect_contradictions(
     if not raw_content:
         raise ValueError(
             "Logic analyzer received an empty response from OpenAI. "
-            "This may be a transient API issue â€” please retry."
+            "This may be a transient API issue — please retry."
         )
 
     logger.info(
         "Logic analysis response received. Finish reason: '%s'. "
-        "Tokens â€” prompt: %d, completion: %d.",
+        "Tokens — prompt: %d, completion: %d.",
         response.choices[0].finish_reason,
         response.usage.prompt_tokens if response.usage else -1,
         response.usage.completion_tokens if response.usage else -1,
@@ -287,11 +287,11 @@ def _build_user_message(serialized_events: str, event_count: int) -> str:
     Builds the user-turn message containing the events and explicit analysis request.
     """
     return (
-        f"AÅŸaÄŸÄ±da, bir hukuki belgeden Ã§Ä±karÄ±lmÄ±ÅŸ {event_count} adet zaman Ã§izelgesi olayÄ± "
-        f"bulunmaktadÄ±r. Her olay, dizideki konumuna karÅŸÄ±lÄ±k gelen bir `id` alanÄ±na sahiptir "
-        f"(0-tabanlÄ± indeks). `involved_event_ids` alanÄ±nda bu `id` deÄŸerlerini kullan.\n\n"
-        f"TÃ¼m olaylarÄ± dikkatle incele, Ã§apraz referanslama yap ve tespit ettiÄŸin tÃ¼m "
-        f"Ã§eliÅŸkileri, mantÄ±ksal hatalarÄ± ve bilgi boÅŸluklarÄ±nÄ± raporla.\n\n"
+        f"Aşağıda, bir hukuki belgeden çıkarılmış {event_count} adet zaman çizelgesi olayı "
+        f"bulunmaktadır. Her olay, dizideki konumuna karşılık gelen bir `id` alanına sahiptir "
+        f"(0-tabanlı indeks). `involved_event_ids` alanında bu `id` değerlerini kullan.\n\n"
+        f"Tüm olayları dikkatle incele, çapraz referanslama yap ve tespit ettiğin tüm "
+        f"çelişkileri, mantıksal hataları ve bilgi boşluklarını raporla.\n\n"
         f"OLAYLAR:\n"
         f"```json\n{serialized_events}\n```"
     )
@@ -351,7 +351,7 @@ def _build_logic_json_schema() -> dict:
             },
             "confidence_score": {
                 "type": "number",
-                "description": "Model's confidence this is a real contradiction (0.0â€“1.0).",
+                "description": "Model's confidence this is a real contradiction (0.0–1.0).",
             },
             "legal_basis": {
                 "type": ["string", "null"],
@@ -377,7 +377,7 @@ def _build_logic_json_schema() -> dict:
             "contradictions": {
                 "type": "array",
                 "items": contradiction_schema,
-                "description": "All detected contradictions, ordered HIGH â†’ LOW severity.",
+                "description": "All detected contradictions, ordered HIGH → LOW severity.",
             },
             "total_contradictions_found": {
                 "type": "integer",
@@ -443,7 +443,7 @@ def _parse_and_validate(raw_json: str, total_events: int) -> LogicAnalysisResult
         valid_ids = [i for i in ids if 0 <= i < total_events]
         if len(valid_ids) != len(ids):
             logger.warning(
-                "Clamped invalid event IDs %s â†’ %s (total_events=%d)",
+                "Clamped invalid event IDs %s → %s (total_events=%d)",
                 ids, valid_ids, total_events,
             )
         contradiction["involved_event_ids"] = valid_ids if valid_ids else [0]
@@ -458,7 +458,7 @@ def _parse_and_validate(raw_json: str, total_events: int) -> LogicAnalysisResult
     actual = len(result.contradictions)
     if result.total_contradictions_found != actual:
         logger.warning(
-            "total_contradictions_found (%d) â‰  actual count (%d). Correcting.",
+            "total_contradictions_found (%d) ≠ actual count (%d). Correcting.",
             result.total_contradictions_found,
             actual,
         )
@@ -470,4 +470,5 @@ def _parse_and_validate(raw_json: str, total_events: int) -> LogicAnalysisResult
         result.risk_level,
     )
     return result
+
 

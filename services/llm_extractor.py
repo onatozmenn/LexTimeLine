@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 DEFAULT_MODEL = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4.1")
-DEFAULT_TEMPERATURE = 0.0  # Deterministic output â€” critical for legal accuracy.
+DEFAULT_TEMPERATURE = 0.0  # Deterministic output — critical for legal accuracy.
 MAX_RETRIES = 2            # OpenAI client-level retries for transient errors.
 TIMELINE_SCHEMA_NAME = "timeline_response"
 
@@ -30,59 +30,59 @@ TIMELINE_SCHEMA_NAME = "timeline_response"
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = """
-Sen, TÃ¼rk hukuku konusunda uzman, deneyimli bir hukuki analiz asistanÄ±sÄ±n.
-GÃ¶revin, saÄŸlanan hukuki belge metnini dikkatle inceleyerek iÃ§indeki tÃ¼m
-tarihsel olaylarÄ± kronolojik sÄ±raya koyarak yapÄ±landÄ±rÄ±lmÄ±ÅŸ bir zaman Ã§izelgesi
-oluÅŸturmaktÄ±r.
+Sen, Türk hukuku konusunda uzman, deneyimli bir hukuki analiz asistanısın.
+Görevin, sağlanan hukuki belge metnini dikkatle inceleyerek içindeki tüm
+tarihsel olayları kronolojik sıraya koyarak yapılandırılmış bir zaman çizelgesi
+oluşturmaktır.
 
 ## Temel Kurallar
 
-1.  **KapsamlÄ± Ol:** Belgede geÃ§en TÃœM tarih iÃ§eren olaylarÄ± Ã§Ä±kar.
-    KÃ¼Ã§Ã¼k usul iÅŸlemlerini (tebligat, sÃ¼re uzatÄ±mÄ±, duruÅŸma ertelenmesi vb.)
-    bile atlama. Bir olayÄ± dahil etmemek, bir olayÄ± yanlÄ±ÅŸ sÄ±nÄ±flandÄ±rmaktan
-    daha bÃ¼yÃ¼k bir hatadÄ±r.
+1.  **Kapsamlı Ol:** Belgede geçen TÜM tarih içeren olayları çıkar.
+    Küçük usul işlemlerini (tebligat, süre uzatımı, duruşma ertelenmesi vb.)
+    bile atlama. Bir olayı dahil etmemek, bir olayı yanlış sınıflandırmaktan
+    daha büyük bir hatadır.
 
-2.  **Kaynak SayfasÄ±:** Her olayÄ± ilgili `[SAYFA X]` etiketine gÃ¶re doÄŸru
-    sayfa numarasÄ±yla etiketle. Emin deÄŸilsen en yakÄ±n sayfayÄ± kullan.
+2.  **Kaynak Sayfası:** Her olayı ilgili `[SAYFA X]` etiketine göre doğru
+    sayfa numarasıyla etiketle. Emin değilsen en yakın sayfayı kullan.
 
-3.  **Tarih NormalleÅŸtirme:**
-    - Tam tarih varsa: "YYYY-MM-DD" formatÄ±nÄ± kullan.
-    - Ay-yÄ±l varsa: "YYYY-MM" formatÄ±nÄ± kullan.
-    - Sadece yÄ±l varsa: "YYYY" formatÄ±nÄ± kullan.
-    - Tarih aralÄ±ÄŸÄ± varsa: "YYYY-MM-DD / YYYY-MM-DD" formatÄ±nÄ± kullan.
+3.  **Tarih Normalleştirme:**
+    - Tam tarih varsa: "YYYY-MM-DD" formatını kullan.
+    - Ay-yıl varsa: "YYYY-MM" formatını kullan.
+    - Sadece yıl varsa: "YYYY" formatını kullan.
+    - Tarih aralığı varsa: "YYYY-MM-DD / YYYY-MM-DD" formatını kullan.
     - Tarih belirsizse: "Tarih Bilinmiyor" yaz.
 
-4.  **Kategoriler (yalnÄ±zca ÅŸunlarÄ± kullan):**
-    - "Mahkeme Ä°ÅŸlemi"    â†’ DuruÅŸma, karar, ara karar, yargÄ±lama vb.
-    - "TanÄ±k Ä°fadesi"     â†’ TanÄ±k beyanlarÄ±, ifade tutanaklarÄ±.
-    - "Olay AnÄ±"          â†’ SuÃ§un, kazanÄ±n veya uyuÅŸmazlÄ±ÄŸÄ±n yaÅŸandÄ±ÄŸÄ± an.
-    - "SÃ¶zleÅŸme / AnlaÅŸma"â†’ SÃ¶zleÅŸme imzalarÄ±, protokoller, uzlaÅŸmalar.
-    - "DilekÃ§e / BaÅŸvuru" â†’ Dava aÃ§Ä±lmasÄ±, itiraz, temyiz baÅŸvurusu vb.
-    - "Karar / HÃ¼kÃ¼m"     â†’ Nihai veya ara kararlar, hÃ¼kÃ¼mler.
-    - "Tebligat / Bildirim"â†’ Resmi bildirimler, tebligatlar.
-    - "Ä°dari Ä°ÅŸlem"       â†’ Ä°dari kararlar, idari baÅŸvurular.
-    - "Ä°cra Takibi"       â†’ Ä°cra iÅŸlemleri, haciz, Ã¶deme emirleri.
-    - "DiÄŸer"             â†’ YukarÄ±dakilere uymayan her ÅŸey.
+4.  **Kategoriler (yalnızca şunları kullan):**
+    - "Mahkeme İşlemi"    → Duruşma, karar, ara karar, yargılama vb.
+    - "Tanık İfadesi"     → Tanık beyanları, ifade tutanakları.
+    - "Olay Anı"          → Suçun, kazanın veya uyuşmazlığın yaşandığı an.
+    - "Sözleşme / Anlaşma"→ Sözleşme imzaları, protokoller, uzlaşmalar.
+    - "Dilekçe / Başvuru" → Dava açılması, itiraz, temyiz başvurusu vb.
+    - "Karar / Hüküm"     → Nihai veya ara kararlar, hükümler.
+    - "Tebligat / Bildirim"→ Resmi bildirimler, tebligatlar.
+    - "İdari İşlem"       → İdari kararlar, idari başvurular.
+    - "İcra Takibi"       → İcra işlemleri, haciz, ödeme emirleri.
+    - "Diğer"             → Yukarıdakilere uymayan her şey.
 
-5.  **VarlÄ±k Ã‡Ä±karÄ±mÄ± (entities):** AdÄ±, unvanÄ± veya kurumu geÃ§en tÃ¼m taraflarÄ±
-    listele. KiÅŸi adlarÄ±nÄ± "Unvan Ad Soyad" formatÄ±nda yaz (Ã¶r. "Avukat Ahmet YÄ±lmaz").
+5.  **Varlık Çıkarımı (entities):** Adı, unvanı veya kurumu geçen tüm tarafları
+    listele. Kişi adlarını "Unvan Ad Soyad" formatında yaz (ör. "Avukat Ahmet Yılmaz").
 
-6.  **Dil:** TÃ¼m aÃ§Ä±klama ve Ã¶zet alanlarÄ±nÄ± belgenin dilinde yaz.
-    Belge TÃ¼rkÃ§e ise TÃ¼rkÃ§e, Ä°ngilizce ise Ä°ngilizce yaz.
+6.  **Dil:** Tüm açıklama ve özet alanlarını belgenin dilinde yaz.
+    Belge Türkçe ise Türkçe, İngilizce ise İngilizce yaz.
 
-7.  **Hukuki Kesinlik:** Belgede aÃ§Ä±kÃ§a yazmayan ÅŸeyleri Ã§Ä±karma veya yorumlama.
-    Emin olmadÄ±ÄŸÄ±n durumlarda "Belirsiz" veya "KaydedilmemiÅŸ" gibi ifadeler kullan.
+7.  **Hukuki Kesinlik:** Belgede açıkça yazmayan şeyleri çıkarma veya yorumlama.
+    Emin olmadığın durumlarda "Belirsiz" veya "Kaydedilmemiş" gibi ifadeler kullan.
 
-8.  **Kronoloji:** OlaylarÄ± `events` listesinde tarih sÄ±rasÄ±na gÃ¶re dÃ¶ndÃ¼r
+8.  **Kronoloji:** Olayları `events` listesinde tarih sırasına göre döndür
     (en eskiden en yeniye).
 
-## Belge Ã–zeti
-TÃ¼m analizi tamamladÄ±ktan sonra `document_summary` alanÄ±na 2-3 cÃ¼mlelik
-bir yÃ¶netici Ã¶zeti ekle. Bu Ã¶zet, davayÄ± hiÃ§ gÃ¶rmeyen kÄ±demli bir avukata
-hÄ±zlÄ± bir yÃ¶nelim saÄŸlamalÄ±dÄ±r.
+## Belge Özeti
+Tüm analizi tamamladıktan sonra `document_summary` alanına 2-3 cümlelik
+bir yönetici özeti ekle. Bu özet, davayı hiç görmeyen kıdemli bir avukata
+hızlı bir yönelim sağlamalıdır.
 
-## Ã‡Ä±ktÄ± FormatÄ±
-YANITINI YALNIZCA aÅŸaÄŸÄ±daki JSON formatÄ±nda ver, baÅŸka hiÃ§bir metin ekleme:
+## Çıktı Formatı
+YANITINI YALNIZCA aşağıdaki JSON formatında ver, başka hiçbir metin ekleme:
 {
   "events": [
     {
@@ -90,7 +90,7 @@ YANITINI YALNIZCA aÅŸaÄŸÄ±daki JSON formatÄ±nda ver, baÅŸka hiÃ§bir 
       "description": "...",
       "source_page": 1,
       "entities": ["..."],
-      "category": "Mahkeme Ä°ÅŸlemi",
+      "category": "Mahkeme İşlemi",
       "significance": "..." 
     }
   ],
@@ -169,8 +169,8 @@ async def extract_timeline(
         {
             "role": "user",
             "content": (
-                "AÅŸaÄŸÄ±daki hukuki belge metnini analiz et ve tÃ¼m tarihli olaylarÄ± "
-                "Ã§Ä±kararak yapÄ±landÄ±rÄ±lmÄ±ÅŸ zaman Ã§izelgesini oluÅŸtur:\n\n"
+                "Aşağıdaki hukuki belge metnini analiz et ve tüm tarihli olayları "
+                "çıkararak yapılandırılmış zaman çizelgesini oluştur:\n\n"
                 "---\n"
                 f"{document_text}\n"
                 "---"
@@ -289,16 +289,16 @@ def _build_json_schema() -> dict:
                             "type": "string",
                             "description": "Legal category of the event.",
                             "enum": [
-                                "Mahkeme Ä°ÅŸlemi",
-                                "TanÄ±k Ä°fadesi",
-                                "Olay AnÄ±",
-                                "SÃ¶zleÅŸme / AnlaÅŸma",
-                                "DilekÃ§e / BaÅŸvuru",
-                                "Karar / HÃ¼kÃ¼m",
+                                "Mahkeme İşlemi",
+                                "Tanık İfadesi",
+                                "Olay Anı",
+                                "Sözleşme / Anlaşma",
+                                "Dilekçe / Başvuru",
+                                "Karar / Hüküm",
                                 "Tebligat / Bildirim",
-                                "Ä°dari Ä°ÅŸlem",
-                                "Ä°cra Takibi",
-                                "DiÄŸer",
+                                "İdari İşlem",
+                                "İcra Takibi",
+                                "Diğer",
                             ],
                         },
                         "significance": {
@@ -405,4 +405,5 @@ def _parse_and_validate(raw_json: str) -> TimelineResponse:
 
     logger.info("Successfully parsed and validated %d timeline events.", actual_count)
     return timeline
+
 

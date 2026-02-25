@@ -144,9 +144,19 @@ export function TimelineEventCard({
           />
         )}
 
-        <button
+        <div
           className="w-full text-left px-5 py-4 flex items-start gap-4"
           onClick={() => hasDetails && setExpanded((v) => !v)}
+          onKeyDown={(e) => {
+            if (!hasDetails) return;
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setExpanded((v) => !v);
+            }
+          }}
+          role={hasDetails ? "button" : undefined}
+          tabIndex={hasDetails ? 0 : -1}
+          aria-expanded={hasDetails ? expanded : undefined}
           style={{ cursor: hasDetails ? "pointer" : "default" }}
         >
           <div className="flex-shrink-0 flex items-center gap-1.5 bg-surface-muted rounded-lg px-3 py-1.5 mt-0.5">
@@ -199,7 +209,7 @@ export function TimelineEventCard({
               )}
             </div>
           )}
-        </button>
+        </div>
 
         {expanded && hasDetails && (
           <div className="border-t border-border-subtle bg-surface-page px-5 py-4 space-y-4">
