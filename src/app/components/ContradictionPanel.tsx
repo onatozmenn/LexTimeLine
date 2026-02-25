@@ -9,29 +9,27 @@ interface ContradictionPanelProps {
   onEventClick?: (eventId: number) => void;
 }
 
-// ── Risk level config ────────────────────────────────────────────────────────
-
 const RISK_CONFIG = {
   HIGH: {
-    bg: "bg-gradient-to-r from-[#7F1D1D] to-[#DC2626]",
+    bg: "bg-gradient-to-r from-severity-high-text to-severity-high-solid",
     icon: <ShieldX className="w-6 h-6 text-white" strokeWidth={1.8} />,
     label: "Yüksek Risk",
     sub: "Dava sonucunu etkileyebilecek ciddi çelişkiler tespit edildi.",
   },
   MEDIUM: {
-    bg: "bg-gradient-to-r from-[#78350F] to-[#D97706]",
+    bg: "bg-gradient-to-r from-severity-medium-text to-severity-medium-solid",
     icon: <ShieldAlert className="w-6 h-6 text-white" strokeWidth={1.8} />,
     label: "Orta Risk",
     sub: "Bazı tutarsızlıklar mevcut; derinlemesine inceleme önerilir.",
   },
   LOW: {
-    bg: "bg-gradient-to-r from-[#1E3A5F] to-[#3B82F6]",
+    bg: "bg-gradient-to-r from-accent-primary-strong to-severity-low-solid",
     icon: <ShieldAlert className="w-6 h-6 text-white" strokeWidth={1.8} />,
     label: "Düşük Risk",
-    sub: "Küçük tutarsızlıklar saptandı; dava bütünlüğü genel itibarıyla sağlam.",
+    sub: "Küçük tutarsızlıklar saptandı; genel bütünlük korunuyor.",
   },
   NONE: {
-    bg: "bg-gradient-to-r from-[#14532D] to-[#16A34A]",
+    bg: "bg-gradient-to-r from-severity-none-text to-severity-none-solid",
     icon: <ShieldCheck className="w-6 h-6 text-white" strokeWidth={1.8} />,
     label: "Çelişki Yok",
     sub: "Belgede mantıksal tutarsızlık veya çelişki tespit edilemedi.",
@@ -48,12 +46,10 @@ const SEVERITY_DISPLAY: Record<string, string> = {
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
-  HIGH: "bg-[#FEF2F2] text-[#B91C1C] border-[#FECACA]",
-  MEDIUM: "bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]",
-  LOW: "bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]",
+  HIGH: "bg-severity-high-bg text-severity-high-text border-severity-high-border",
+  MEDIUM: "bg-severity-medium-bg text-severity-medium-text border-severity-medium-border",
+  LOW: "bg-severity-low-bg text-severity-low-text border-severity-low-border",
 };
-
-// ── Component ────────────────────────────────────────────────────────────────
 
 export function ContradictionPanel({
   contradictions,
@@ -75,32 +71,25 @@ export function ContradictionPanel({
       MEDIUM: contradictions.filter((c) => c.severity === "MEDIUM").length,
       LOW: contradictions.filter((c) => c.severity === "LOW").length,
     }),
-    [contradictions]
+    [contradictions],
   );
 
   return (
     <div className="space-y-5">
-      {/* ── Risk Banner ──────────────────────────────────────────────── */}
       <div className={`rounded-2xl overflow-hidden shadow-sm ${riskCfg.bg}`}>
         <div className="px-6 py-5 flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
             {riskCfg.icon}
           </div>
           <div className="flex-1 min-w-0">
-            <p
-              className="text-white"
-              style={{ fontWeight: 700, fontSize: "1.125rem" }}
-            >
+            <p className="text-white" style={{ fontWeight: 700, fontSize: "1.125rem" }}>
               {riskCfg.label}
             </p>
             <p className="text-white/80 text-sm mt-0.5">{riskCfg.sub}</p>
           </div>
           {contradictions.length > 0 && (
             <div className="flex-shrink-0 bg-white/20 rounded-xl px-4 py-2 text-center">
-              <p
-                className="text-white"
-                style={{ fontWeight: 800, fontSize: "1.5rem", lineHeight: 1 }}
-              >
+              <p className="text-white" style={{ fontWeight: 800, fontSize: "1.5rem", lineHeight: 1 }}>
                 {contradictions.length}
               </p>
               <p className="text-white/70 text-xs mt-0.5">Çelişki</p>
@@ -108,68 +97,55 @@ export function ContradictionPanel({
           )}
         </div>
 
-        {/* Severity breakdown bar */}
         {contradictions.length > 0 && (
           <div className="bg-black/20 px-6 py-3 flex items-center gap-4 flex-wrap">
             {(["HIGH", "MEDIUM", "LOW"] as const).map((sev) =>
               counts[sev] > 0 ? (
                 <div key={sev} className="flex items-center gap-1.5">
                   <span className="text-white/60 text-xs">{SEVERITY_DISPLAY[sev]}:</span>
-                  <span
-                    className="text-white text-xs"
-                    style={{ fontWeight: 700 }}
-                  >
+                  <span className="text-white text-xs" style={{ fontWeight: 700 }}>
                     {counts[sev]}
                   </span>
                 </div>
-              ) : null
+              ) : null,
             )}
           </div>
         )}
       </div>
 
-      {/* ── Analysis notes ───────────────────────────────────────────── */}
       {analysisNotes && (
-        <div className="bg-[#F5F3FF] dark:bg-[#2E1065] border border-[#DDD6FE] dark:border-[#5B21B6] rounded-xl px-4 py-4">
-          <p className="text-xs text-[#5B21B6] dark:text-[#C4B5FD] mb-1" style={{ fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <div className="bg-surface-info border border-border-subtle rounded-xl px-4 py-4">
+          <p className="text-xs text-text-accent mb-1" style={{ fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>
             Analist Notu
           </p>
-          <p className="text-sm text-[#4C1D95] dark:text-[#DDD6FE]" style={{ lineHeight: 1.7 }}>
+          <p className="text-sm text-text-secondary" style={{ lineHeight: 1.7 }}>
             {analysisNotes}
           </p>
         </div>
       )}
 
-      {/* ── Filter bar ───────────────────────────────────────────────── */}
       {contradictions.length > 1 && (
         <div className="flex items-center gap-3 flex-wrap">
-          <div
-            className="flex items-center gap-1.5 text-sm text-[#344054] dark:text-[#CBD5E1]"
-            style={{ fontWeight: 500 }}
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-[#667085]" />
+          <div className="flex items-center gap-1.5 text-sm text-text-secondary" style={{ fontWeight: 500 }}>
+            <SlidersHorizontal className="w-3.5 h-3.5 text-text-muted" />
             Filtrele:
           </div>
           <div className="flex flex-wrap gap-2">
             {SEVERITY_FILTER_LABELS.map((label) => {
               const isActive = severityFilter === label;
-              const count =
-                label === "Tümü"
-                  ? contradictions.length
-                  : counts[label as keyof typeof counts];
-              const colorClass =
-                label !== "Tümü" ? SEVERITY_COLORS[label] : "";
+              const count = label === "Tümü" ? contradictions.length : counts[label as keyof typeof counts];
+              const colorClass = label !== "Tümü" ? SEVERITY_COLORS[label] : "";
 
               return (
                 <button
                   key={label}
                   onClick={() => setSeverityFilter(label)}
                   className={`
-                    text-xs rounded-full px-3 py-1.5 transition-all border
+                    text-xs rounded-full px-3 py-1.5 transition-all border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary
                     ${isActive
-                      ? "bg-[#1E3A5F] text-white border-[#1E3A5F]"
+                      ? "bg-accent-primary-strong text-white border-accent-primary-strong"
                       : label === "Tümü"
-                      ? "bg-white dark:bg-[#334155] text-[#344054] dark:text-[#CBD5E1] border-[#D0D5DD] dark:border-[#475569] hover:border-[#2D6BE4]"
+                      ? "bg-surface-card text-text-secondary border-border-default hover:border-border-accent"
                       : `${colorClass} hover:opacity-80`
                     }
                   `}
@@ -183,25 +159,20 @@ export function ContradictionPanel({
         </div>
       )}
 
-      {/* ── Cards ────────────────────────────────────────────────────── */}
       {contradictions.length === 0 ? (
         <div className="text-center py-12 space-y-3">
-          <div className="w-12 h-12 rounded-full bg-[#F0FDF4] dark:bg-[#052e16] flex items-center justify-center mx-auto">
-            <ShieldCheck className="w-6 h-6 text-[#16A34A]" />
+          <div className="w-12 h-12 rounded-full bg-severity-none-bg flex items-center justify-center mx-auto">
+            <ShieldCheck className="w-6 h-6 text-severity-none-solid" />
           </div>
-          <p className="text-sm text-[#344054] dark:text-[#CBD5E1]" style={{ fontWeight: 500 }}>
+          <p className="text-sm text-text-secondary" style={{ fontWeight: 500 }}>
             Çelişki bulunamadı
           </p>
-          <p className="text-xs text-[#667085] dark:text-[#94A3B8]">
-            Belge iç tutarlılık açısından sorunsuz görünmektedir.
-          </p>
+          <p className="text-xs text-text-muted">Belge iç tutarlılık açısından sorunsuz görünüyor.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filtered.length === 0 ? (
-            <p className="text-center text-sm text-[#667085] py-8">
-              Bu önem düzeyinde çelişki bulunamadı.
-            </p>
+            <p className="text-center text-sm text-text-muted py-8">Bu önem düzeyinde çelişki bulunamadı.</p>
           ) : (
             filtered.map((contradiction, i) => (
               <ContradictionCard

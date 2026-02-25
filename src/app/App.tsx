@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
 import { UploadZone } from "./components/UploadZone";
 import { TimelineView, type AnalysisResultData } from "./components/TimelineView";
+import { LEX_AI_MODEL } from "./constants/ai";
+import { DEMO_ANALYSIS } from "./data/demoAnalysis";
 
 type AppState = "idle" | "loading" | "result" | "error";
 
@@ -19,6 +21,16 @@ export default function App() {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
   }, [dark]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const demoEnabled = new URLSearchParams(window.location.search).get("demo") === "1";
+    if (!demoEnabled) return;
+    setAnalysis(DEMO_ANALYSIS);
+    setFileName("lex-sample-case.pdf");
+    setState("result");
+    setErrorMessage("");
+  }, []);
 
   const handleFileSelected = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -58,20 +70,19 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0F172A] flex flex-col transition-colors duration-200">
-      {/* ── Navigation ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-[#1E293B] border-b border-[#E4E7EC] dark:border-[#334155] shadow-sm transition-colors duration-200">
+    <div className="min-h-screen bg-surface-page flex flex-col transition-colors duration-200">
+      <header className="sticky top-0 z-50 bg-surface-header border-b border-border-subtle shadow-sm transition-colors duration-200">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span
-                className="text-[#101828] dark:text-white"
+                className="text-text-primary"
                 style={{ fontWeight: 700, letterSpacing: "-0.01em" }}
               >
                 LexTimeline
               </span>
               <span
-                className="text-xs bg-[#EEF4FF] dark:bg-[#1E3A5F] text-[#3538CD] dark:text-[#93C5FD] rounded-full px-2 py-0.5"
+                className="text-xs bg-surface-soft text-text-accent rounded-full px-2 py-0.5"
                 style={{ fontWeight: 500 }}
               >
                 v1.1 · Deep Analysis
@@ -80,30 +91,30 @@ export default function App() {
           </div>
           <button
             onClick={() => setDark((d) => !d)}
-            className="p-2 rounded-lg hover:bg-[#F2F4F7] dark:hover:bg-[#334155] text-[#667085] dark:text-[#94A3B8] transition-colors"
-            aria-label="Karanlık mod değiştir"
+            className="p-2 rounded-lg hover:bg-surface-muted text-text-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+            aria-label="Karanlık modu değiştir"
+            aria-pressed={dark}
+            title={dark ? "Açık moda geç" : "Koyu moda geç"}
           >
             {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
         </div>
       </header>
 
-      {/* ── Main ───────────────────────────────────────────────────── */}
       <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-10">
         {state === "result" && analysis ? (
           <TimelineView data={analysis} fileName={fileName} onReset={handleReset} />
         ) : (
           <div className="max-w-2xl mx-auto space-y-8">
-            {/* Hero */}
             <div className="space-y-4 text-center pt-4">
               <div
-                className="inline-flex items-center gap-2 bg-[#EEF4FF] dark:bg-[#1E3A5F] text-[#3538CD] dark:text-[#93C5FD] rounded-full px-4 py-1.5 text-sm"
+                className="inline-flex items-center gap-2 bg-surface-soft text-text-accent rounded-full px-4 py-1.5 text-sm"
                 style={{ fontWeight: 500 }}
               >
-                Hukuki Belge Analizi &bull; GPT-4.1 Structured Outputs
+                Hukuki Belge Analizi • {LEX_AI_MODEL} Structured Outputs
               </div>
               <h1
-                className="text-[#101828] dark:text-white"
+                className="text-text-primary"
                 style={{
                   fontSize: "2rem",
                   fontWeight: 700,
@@ -112,37 +123,36 @@ export default function App() {
                 }}
               >
                 Belgelerinizi zaman çizelgesine dönüştürün,{" "}
-                <span className="text-[#DC2626]">çelişkileri</span> tespit edin,{" "}
-                <span className="text-[#7C3AED]">ilişkileri</span> haritalandırın
+                <span className="text-severity-high-solid">çelişkileri</span> tespit edin,{" "}
+                <span className="text-text-accent">ilişkileri</span>{" "}
+                haritalandırın
               </h1>
-              <p className="text-[#667085] dark:text-[#94A3B8]" style={{ lineHeight: 1.7 }}>
-                PDF'inizi yükleyin. GPT-4.1'in üç aşamalı analizi ile kronolojik olay
-                çizelgesi, çelişki dedektifi ve otomatik düzenlenmiş ilişki haritası —
-                hepsi tek bir arayüzde.
+              <p className="text-text-muted" style={{ lineHeight: 1.7 }}>
+                PDF&apos;inizi yükleyin. {LEX_AI_MODEL}&apos;in üç aşamalı analizi ile
+                kronolojik olay çizelgesi, çelişki dedektifi ve otomatik düzenlenmiş ilişki
+                haritası tek bir arayüzde.
+              </p>
+              <p className="text-xs text-text-subtle">
+                Hızlı tanıtım modu: <a className="text-text-accent underline" href="?demo=1">demo ekranını aç</a>
               </p>
             </div>
 
-            {/* Upload zone */}
-            <div className="bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E4E7EC] dark:border-[#334155] shadow-sm p-6 transition-colors duration-200">
-              <UploadZone
-                onFileSelected={handleFileSelected}
-                isLoading={state === "loading"}
-              />
+            <div className="bg-surface-card rounded-2xl border border-border-subtle shadow-sm p-6 transition-colors duration-200">
+              <UploadZone onFileSelected={handleFileSelected} isLoading={state === "loading"} />
             </div>
 
-            {/* Error message */}
             {state === "error" && (
-              <div className="rounded-xl bg-[#FEF3F2] dark:bg-[#450A0A] border border-[#FECDCA] dark:border-[#7F1D1D] px-5 py-4 text-sm text-[#B42318] dark:text-[#FCA5A5]">
+              <div
+                className="rounded-xl bg-surface-danger border border-border-danger px-5 py-4 text-sm text-text-danger"
+                role="alert"
+                aria-live="assertive"
+              >
                 <strong>Hata:</strong> {errorMessage}
               </div>
             )}
-
-
           </div>
         )}
       </main>
-
     </div>
   );
 }
-

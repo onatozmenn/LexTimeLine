@@ -1,45 +1,57 @@
-# LexTimeLine
+<p align="center">
+  <img src="docs/assets/lex-logo-minimal.svg" alt="LexTimeline logo" width="520" />
+</p>
 
-**LexTimeLine** is an AI-powered legal document analysis tool that transforms Turkish legal PDFs into interactive, structured timelines — and automatically detects contradictions between events. It also includes a RAG-lite chat assistant so you can ask natural-language questions about a case directly from the analyzed document.
+<p align="center">
+  <b>AI-powered legal timeline intelligence for Turkish case files.</b><br/>
+  Extract chronology, detect contradictions, explore relationship graphs, and interrogate your case with chat.
+</p>
+
+<p align="center">
+  <a href="https://github.com/onatozmenn/LexTimeLine/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/onatozmenn/LexTimeLine?style=for-the-badge"/></a>
+  <a href="https://github.com/onatozmenn/LexTimeLine/network/members"><img alt="GitHub forks" src="https://img.shields.io/github/forks/onatozmenn/LexTimeLine?style=for-the-badge"/></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-16a34a?style=for-the-badge"/></a>
+  <img alt="Python" src="https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge"/>
+  <img alt="React" src="https://img.shields.io/badge/React-18-0ea5e9?style=for-the-badge"/>
+</p>
+
+<p align="center">
+  If this project is useful, please <b>star the repo</b> to support development.
+</p>
 
 ---
 
-## Features
+## Why LexTimeline?
 
-| Feature | Description |
-|---|---|
-| **PDF Upload** | Drag-and-drop or click-to-upload any Turkish legal PDF (up to 50 MB) |
-| **Timeline Extraction** | AI extracts every date-bound legal event into a clean, ordered timeline |
-| **Contradiction Detection** | Automatically identifies logical conflicts between timeline events |
-| **Case Chat Assistant** | Ask natural-language questions about the case; get cited, grounded answers |
-| **Dark / Light Mode** | Fully themeable interface with persisted user preference |
-| **Docker Ready** | Single-image deployment via the included `Dockerfile` |
+Legal files are long, repetitive, and full of temporal dependency.
+LexTimeline gives you a litigation-oriented cockpit:
+
+- Timeline-first analysis with source pages and event-level significance
+- Automatic contradiction detection with severity, confidence, legal basis, and suggested action
+- Interactive relationship graph (event/event contradiction links + entities)
+- Built-in legal chat assistant with citation jumps (`[Olay #N]`)
+- Dark-mode polished UI with semantic design tokens
 
 ---
 
-## Architecture
+## Product Gallery
 
-```
-┌─────────────────────────────────┐      ┌──────────────────────────────────────┐
-│      React + TypeScript         │      │          FastAPI (Python)            │
-│      Vite  ·  Tailwind CSS      │◄────►│                                      │
-│      shadcn/ui  ·  Lucide       │      │  POST /analyze        (Phase 1 only) │
-└─────────────────────────────────┘      │  POST /analyze/deep   (Phase 1 + 2)  │
-                                         │  POST /chat           (Case Q&A)     │
-                                         │                                      │
-                                         │  services/                           │
-                                         │    pdf_parser.py   ← PyMuPDF         │
-                                         │    llm_extractor.py ← Azure OpenAI   │
-                                         │    logic_analyzer.py                 │
-                                         │    chat_service.py  ← RAG-lite       │
-                                         └──────────────────────────────────────┘
-```
+### 1) Upload & Analyze
+![Upload screen](docs/screenshots/upload-light.png)
 
-**Phase 1** — PDF text is extracted page-by-page with PyMuPDF and sent to GPT-4.1 via Azure OpenAI. The model returns a strictly validated JSON timeline (`TimelineResponse`).
+### 2) Timeline View
+![Timeline view](docs/screenshots/timeline-dark.png)
 
-**Phase 2** — The timeline is passed to a second LLM call that identifies contradictions between events and returns scored `ContradictionReport` objects.
+### 3) Contradiction Detective
+![Contradiction panel](docs/screenshots/contradictions-dark.png)
 
-**Chat** — The full `AnalysisResult` (timeline + contradictions) is injected into GPT-4o's context window. The model answers questions in Turkish with `[Olay #N]` event citations.
+### 4) Relationship Graph
+![Graph view](docs/screenshots/graph-dark.png)
+
+### 5) Case Chat (with transparent degrade mode fallback)
+![Chat view](docs/screenshots/chat-dark.png)
+
+> Screenshots are generated from the included demo dataset and sample PDF in this repository.
 
 ---
 
@@ -47,137 +59,199 @@
 
 ### Prerequisites
 
-- **Node.js** ≥ 18
-- **Python** ≥ 3.11
-- An **Azure OpenAI** resource (or standard OpenAI API key — update the client in `services/llm_extractor.py`)
+- Node.js 18+
+- Python 3.11+
+- Azure OpenAI credentials (for full backend AI flow)
 
-### 1 — Clone & install
+### Install
 
 ```bash
 git clone https://github.com/onatozmenn/LexTimeLine.git
 cd LexTimeLine
 
-# Frontend
 npm install
-
-# Backend
 pip install -r requirements.txt
 ```
 
-### 2 — Configure environment variables
+### Environment
 
-Create a `.env` file in the project root:
+Create `.env` in project root:
 
 ```env
 AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
 AZURE_OPENAI_API_KEY=<your-api-key>
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4.1        # timeline & contradiction model
-AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=gpt-4o   # chat assistant model
-AZURE_OPENAI_API_VERSION=2024-02-01
+AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4.1
+AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=gpt-4.1
+AZURE_OPENAI_API_VERSION=2024-12-01-preview
 ```
 
-### 3 — Run (development)
+### Run
 
-**Terminal 1 — Backend**
+Terminal 1:
+
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Terminal 2 — Frontend**
+Terminal 2:
+
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.  
-API docs are available at [http://localhost:8000/docs](http://localhost:8000/docs).
+Open:
+
+- Frontend: `http://localhost:5173`
+- API Docs: `http://localhost:8000/docs`
 
 ---
 
-## Docker
+## Sample PDF Included
+
+Use this file to test the upload flow immediately:
+
+- [`docs/samples/lex-sample-case.pdf`](docs/samples/lex-sample-case.pdf)
+
+Regenerate it:
 
 ```bash
-# Build
-docker build -t lextimeline .
-
-# Run
-docker run -p 8000:8000 --env-file .env lextimeline
+npm run sample:pdf
 ```
-
-The container serves the pre-built React app as static files from the FastAPI process on port `8000`.
 
 ---
 
-## Deployment
+## Demo Mode (No Backend Needed for UI Preview)
 
-The repository includes ready-to-use configuration for two platforms:
+For instant UI exploration (timeline, contradictions, graph, chat):
 
-| Platform | Config file |
-|---|---|
-| **Fly.io** | `fly.toml` |
-| **Render** | `render.yaml` |
+`http://localhost:5173/?demo=1`
 
-Set the environment variables listed above as secrets/env vars in your chosen platform's dashboard.
+This mode loads a bundled analysis object and is intended for UI demos, docs, and screenshots.
+
+---
+
+## Architecture
+
+```text
+React (Vite + TS + Tailwind)
+  -> POST /analyze/deep
+FastAPI
+  -> PDF parse (PyMuPDF)
+  -> LLM extraction (gpt-4.1)
+  -> Logic analyzer (gpt-4.1)
+  -> AnalysisResult
+React UI
+  -> Timeline + Contradictions + Graph + Chat
+```
+
+### Backend Pipeline
+
+1. PDF text extraction (`services/pdf_parser.py`)
+2. Structured event extraction (`services/llm_extractor.py`)
+3. Contradiction analysis (`services/logic_analyzer.py`)
+4. Chat reasoning endpoint (`backend/services/chat_service.py`)
+
+### Frontend UX Layer
+
+- Semantic tokenized theme (`src/styles/theme.css`)
+- Timeline cards + category badges + contradiction chips
+- XYFlow-based graph board with responsive canvas and dark-theme palette
+- Chat fallback transparency (`server` vs `mock` source state)
 
 ---
 
 ## API Reference
 
-### `POST /analyze`
-Upload a PDF and receive a structured timeline (Phase 1 only — faster).
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `POST` | `/analyze` | Fast timeline extraction |
+| `POST` | `/analyze/deep` | Timeline + contradiction intelligence |
+| `POST` | `/chat` | Case Q&A grounded on `AnalysisResult` |
 
-**Request:** `multipart/form-data` — field `file` (PDF)  
-**Response:** `TimelineResponse` JSON
+### `/chat` contract
 
-### `POST /analyze/deep`
-Upload a PDF and receive a timeline **plus** contradiction analysis (Phase 1 + 2).
+Request:
 
-**Request:** `multipart/form-data` — field `file` (PDF)  
-**Response:** `AnalysisResult` JSON
-
-### `POST /chat`
-Ask a natural-language question about a previously analyzed case.
-
-**Request:** JSON `{ "question": "...", "analysis": <AnalysisResult> }`  
-**Response:** JSON `{ "answer": "..." }`
-
----
-
-## Project Structure
-
+```json
+{
+  "query": "Bu davayı özetle",
+  "context": { "...": "AnalysisResult" },
+  "model": "gpt-4.1"
+}
 ```
-├── main.py                   # FastAPI app entry point
-├── models.py                 # Pydantic data models (TimelineEvent, ContradictionReport, …)
-├── requirements.txt          # Python dependencies
-├── services/
-│   ├── pdf_parser.py         # PDF → plain text (PyMuPDF)
-│   ├── llm_extractor.py      # Text → structured timeline (Azure OpenAI)
-│   └── logic_analyzer.py     # Timeline → contradictions (Azure OpenAI)
-├── backend/
-│   ├── main_chat_endpoint.py # /chat route handler
-│   └── services/
-│       └── chat_service.py   # RAG-lite case Q&A service
-├── src/
-│   ├── main.tsx
-│   └── app/
-│       ├── App.tsx
-│       └── components/       # React UI components
-├── Dockerfile
-├── fly.toml
-└── render.yaml
+
+Response:
+
+```json
+{
+  "answer": "...",
+  "model_used": "gpt-4.1"
+}
 ```
 
 ---
 
-## Tech Stack
+## Developer Scripts
 
-**Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lucide Icons  
-**Backend:** FastAPI, Uvicorn, Pydantic v2, PyMuPDF, OpenAI Python SDK  
-**AI:** Azure OpenAI (GPT-4.1 for extraction/analysis, GPT-4o for chat)  
-**Infra:** Docker, Fly.io / Render
+```bash
+npm run dev                 # frontend dev server
+npm run build               # production frontend build
+npm run sample:pdf          # regenerate sample PDF
+npm run screenshots:readme  # regenerate README screenshots
+python -m pytest -q         # backend tests
+```
+
+---
+
+## Deployment
+
+- Dockerfile included (`Dockerfile`)
+- Fly.io config included (`fly.toml`)
+- Render config included (`render.yaml`)
+
+---
+
+## Repository Layout
+
+```text
+main.py
+models.py
+services/
+backend/
+src/
+docs/
+  assets/
+  screenshots/
+  samples/
+scripts/
+```
+
+---
+
+## Contributing
+
+Issues and PRs are welcome.
+
+Good first contribution ideas:
+
+1. Add test coverage for parser/analyzer edge cases
+2. Improve graph clustering/layout for dense case files
+3. Add multi-document case workspace support
+4. Add benchmark suite for extraction quality and latency
 
 ---
 
 ## License
 
-This project is provided as-is for educational and demonstration purposes.  
-See [ATTRIBUTIONS.md](ATTRIBUTIONS.md) for third-party library attributions.
+This project is licensed under the MIT License.
+
+- Full text: [`LICENSE`](LICENSE)
+- Third-party attributions: [`ATTRIBUTIONS.md`](ATTRIBUTIONS.md)
+
+---
+
+<p align="center">
+  Built for legal practitioners who need speed, structure, and explainability.<br/>
+  <b>Star LexTimeline if you want to see this evolve.</b>
+</p>
+

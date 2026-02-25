@@ -1,4 +1,4 @@
-"""
+﻿"""
 LexTimeline - PDF Parser Service
 Uses PyMuPDF (fitz) for high-performance, layout-aware text extraction.
 Returns per-page text with page numbers preserved.
@@ -39,7 +39,7 @@ def extract_text_by_page(file_bytes: bytes) -> List[Tuple[int, str]]:
         raise PDFParsingError("Received empty file bytes. Cannot parse PDF.")
 
     try:
-        # Open from memory stream — avoids writing a temp file to disk.
+        # Open from memory stream â€” avoids writing a temp file to disk.
         pdf_document = fitz.open(stream=file_bytes, filetype="pdf")
     except fitz.FileDataError as exc:
         raise PDFParsingError(f"Invalid or corrupted PDF file: {exc}") from exc
@@ -62,7 +62,7 @@ def extract_text_by_page(file_bytes: bytes) -> List[Tuple[int, str]]:
         else:
             logger.warning(
                 "Page %d/%d yielded no extractable text. "
-                "It may be a scanned image — consider adding OCR support.",
+                "It may be a scanned image â€” consider adding OCR support.",
                 page_number,
                 total_pages,
             )
@@ -88,7 +88,7 @@ def _extract_page_text(page: fitz.Page, page_number: int) -> str:
     """
     Extracts and cleans text from a single PyMuPDF Page object.
 
-    Uses the 'dict' extraction mode (block → line → span) to produce
+    Uses the 'dict' extraction mode (block â†’ line â†’ span) to produce
     well-ordered text, then applies lightweight cleaning heuristics:
     - Strips excessive blank lines.
     - Preserves paragraph breaks (double newlines).
@@ -157,7 +157,7 @@ def build_prompt_text(pages: List[Tuple[int, str]], max_chars: int = 120_000) ->
     Args:
         pages:     Output of `extract_text_by_page`.
         max_chars: Maximum total characters to include. Default 120,000
-                   (~30,000 tokens) — safe for gpt-4o's 128k context.
+                   (~30,000 tokens) â€” safe for gpt-4.1's 128k context.
 
     Returns:
         A single string of all page text, potentially truncated.
@@ -172,8 +172,9 @@ def build_prompt_text(pages: List[Tuple[int, str]], max_chars: int = 120_000) ->
             max_chars,
         )
         full_text = full_text[:max_chars] + (
-            "\n\n[UYARI: Belge içeriği bağlam penceresi sınırı nedeniyle kesildi. "
-            "Yukarıdaki tüm bilgiler analiz edildi; geri kalan sayfalar dahil edilmedi.]"
+            "\n\n[UYARI: Belge iÃ§eriÄŸi baÄŸlam penceresi sÄ±nÄ±rÄ± nedeniyle kesildi. "
+            "YukarÄ±daki tÃ¼m bilgiler analiz edildi; geri kalan sayfalar dahil edilmedi.]"
         )
 
     return full_text
+

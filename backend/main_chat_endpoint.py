@@ -1,93 +1,66 @@
-"""
-main_chat_endpoint.py — additions to main.py
-=============================================
-
-Paste the contents of this file into your existing main.py
-(after the existing imports and app = FastAPI(...) declaration).
-
-New endpoint: POST /chat
+﻿"""
+LexTimeline chat endpoint router.
 """
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from services.chat_service import chat_with_case
+from backend.services.chat_service import chat_with_case
 
+DEFAULT_CHAT_MODEL = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME", "gpt-4.1")
 
-# ── Pydantic models ──────────────────────────────────────────────────────────
+router = APIRouter(tags=["Chat"])
+
 
 class ChatRequest(BaseModel):
-    """
-    Body for POST /chat.
+    """Body for POST /chat."""
 
-    `context` is the verbatim JSON that /analyze/deep returned.
-    The frontend passes it back so the server stays stateless between
-    requests (no server-side session / DB required for the demo).
-    """
     query: str = Field(
         ...,
         min_length=1,
         max_length=2000,
-        description="User's natural-language question.",
-        examples=["Bu davayı kısaca özetle."],
+        description="User natural-language question.",
+        examples=["Bu davayi kisaca ozetle."],
     )
     context: dict[str, Any] = Field(
         ...,
         description="Full AnalysisResult JSON from a prior /analyze/deep call.",
     )
     model: str = Field(
-        default="gpt-4o",
-        description="OpenAI model identifier.",
+        default=DEFAULT_CHAT_MODEL,
+        description="Chat model/deployment name.",
     )
 
 
 class ChatResponse(BaseModel):
     answer: str = Field(description="Grounded answer with [Olay #N] citations.")
-    model_used: str
+    model_used: str = Field(description="Model/deployment used for this answer.")
 
 
-# ── Route ────────────────────────────────────────────────────────────────────
-
-# NOTE: `app` is the FastAPI instance already defined in main.py
-
-@app.post(
+@router.post(
     "/chat",
     response_model=ChatResponse,
-    tags=["chat"],
+    status_code=status.HTTP_200_OK,
     summary="RAG-lite case assistant",
     description=(
         "Takes a user query and the full AnalysisResult JSON as context. "
         "Returns a grounded Turkish-language answer with [Olay #N] citations."
     ),
+    responses={
+        200: {"description": "Chat answer generated."},
+        422: {"description": "Invalid context payload."},
+        503: {"description": "LLM service unavailable."},
+    },
 )
 async def chat_endpoint(req: ChatRequest) -> ChatResponse:
-    """
-    Example request
-    ---------------
-    ```json
-    {
-        "query": "Tespit edilen çelişkileri ve hukuki önemlerini açıkla.",
-        "context": { ...AnalysisResult... },
-        "model": "gpt-4o"
-    }
-    ```
-
-    Example response
-    ----------------
-    ```json
-    {
-        "answer": "Analizde 4 çelişki tespit edilmiştir... [Olay #3] ile [Olay #7]...",
-        "model_used": "gpt-4o"
-    }
-    ```
-    """
     if not req.context.get("events"):
         raise HTTPException(
-            status_code=422,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 "context.events is empty. "
                 "Run POST /analyze/deep first and pass the full result as 'context'."
@@ -100,15 +73,16 @@ async def chat_endpoint(req: ChatRequest) -> ChatResponse:
             context=req.context,
             model=req.model,
         )
-    except Exception as exc:
-        # Surface LLM / network errors as 503 so the frontend can show a retry prompt.
+    except ValueError as exc:
         raise HTTPException(
-            status_code=503,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"LLM unavailable: {exc}",
         ) from exc
 
     return ChatResponse(answer=answer, model_used=req.model)
 
-
-# ── CORS update (add /chat to allowed origins if needed) ────────────────────
-# Your existing CORSMiddleware already covers all routes — no change needed.

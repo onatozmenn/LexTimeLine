@@ -1,0 +1,15 @@
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="lexGradient" x1="16" y1="12" x2="84" y2="84" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2D6BE4"/>
+      <stop offset="1" stop-color="#1E3A5F"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="80" height="80" rx="20" fill="url(#lexGradient)"/>
+  <path d="M26 66V30H36V57H56V66H26Z" fill="white"/>
+  <path d="M52 33H68V41H60V66H52V41H44V33H52Z" fill="white"/>
+  <circle cx="66" cy="22" r="4" fill="#93C5FD"/>
+  <circle cx="74" cy="30" r="3" fill="#EEF4FF"/>
+  <text x="104" y="52" fill="#101828" font-size="28" font-weight="700" font-family="Inter, Segoe UI, Arial, sans-serif">LexTimeline</text>
+  <text x="104" y="74" fill="#667085" font-size="14" font-weight="500" font-family="Inter, Segoe UI, Arial, sans-serif">Legal Timeline Intelligence</text>
+</svg>

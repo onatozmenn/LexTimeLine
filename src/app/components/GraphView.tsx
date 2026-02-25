@@ -88,17 +88,90 @@ interface EntityNodeData extends Record<string, unknown> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SEV_PALETTE = {
-  HIGH:   { bg: "#FEF2F2", border: "#DC2626", text: "#7F1D1D", badge: "#DC2626", muted: "#FCA5A5" },
-  MEDIUM: { bg: "#FFFBEB", border: "#D97706", text: "#78350F", badge: "#D97706", muted: "#FCD34D" },
-  LOW:    { bg: "#EFF6FF", border: "#3B82F6", text: "#1E3A5F", badge: "#3B82F6", muted: "#93C5FD" },
-  NONE:   { bg: "#FFFFFF", border: "#D0D5DD", text: "#101828", badge: "#667085", muted: "#E4E7EC" },
+  HIGH: {
+    bg: "var(--color-severity-high-bg)",
+    border: "var(--color-severity-high-border)",
+    text: "var(--color-severity-high-text)",
+    badge: "var(--color-severity-high-solid)",
+    muted: "var(--color-severity-high-border)",
+  },
+  MEDIUM: {
+    bg: "var(--color-severity-medium-bg)",
+    border: "var(--color-severity-medium-border)",
+    text: "var(--color-severity-medium-text)",
+    badge: "var(--color-severity-medium-solid)",
+    muted: "var(--color-severity-medium-border)",
+  },
+  LOW: {
+    bg: "var(--color-severity-low-bg)",
+    border: "var(--color-severity-low-border)",
+    text: "var(--color-severity-low-text)",
+    badge: "var(--color-severity-low-solid)",
+    muted: "var(--color-severity-low-border)",
+  },
+  NONE: {
+    bg: "var(--color-surface-card)",
+    border: "var(--color-border-default)",
+    text: "var(--color-text-primary)",
+    badge: "var(--color-text-muted)",
+    muted: "var(--color-border-subtle)",
+  },
 } as const;
 
 const KIND_PALETTE: Record<EntityKind, { bg: string; border: string; text: string; muted: string; dimBg: string }> = {
-  court:        { bg: "#F5F3FF", border: "#7C3AED", text: "#4C1D95", muted: "#8B5CF6", dimBg: "#EDE9FE" },
-  organization: { bg: "#F0FDF4", border: "#16A34A", text: "#14532D", muted: "#22C55E", dimBg: "#DCFCE7" },
-  person:       { bg: "#EFF6FF", border: "#2563EB", text: "#1E40AF", muted: "#60A5FA", dimBg: "#DBEAFE" },
+  court: {
+    bg: "var(--color-surface-info)",
+    border: "var(--color-text-accent)",
+    text: "var(--color-text-accent)",
+    muted: "var(--color-accent-primary-subtle)",
+    dimBg: "var(--color-surface-soft)",
+  },
+  organization: {
+    bg: "var(--color-surface-success)",
+    border: "var(--color-severity-none-solid)",
+    text: "var(--color-text-success)",
+    muted: "var(--color-text-success)",
+    dimBg: "var(--color-severity-none-bg)",
+  },
+  person: {
+    bg: "var(--color-severity-low-bg)",
+    border: "var(--color-severity-low-solid)",
+    text: "var(--color-text-accent)",
+    muted: "var(--color-accent-primary-subtle)",
+    dimBg: "var(--color-surface-soft)",
+  },
 };
+
+const GRAPH_COLORS = {
+  accentStrong: "var(--color-accent-primary-strong)",
+  accent: "var(--color-accent-primary)",
+  accentSubtle: "var(--color-accent-primary-subtle)",
+  textPrimary: "var(--color-text-primary)",
+  textSecondary: "var(--color-text-secondary)",
+  textMuted: "var(--color-text-muted)",
+  textSubtle: "var(--color-text-subtle)",
+  surfaceCard: "var(--color-surface-card)",
+  surfacePage: "var(--color-surface-page)",
+  surfaceMuted: "var(--color-surface-muted)",
+  surfaceWarning: "var(--color-severity-medium-bg)",
+  borderSubtle: "var(--color-border-subtle)",
+  borderDefault: "var(--color-border-default)",
+  borderAccent: "var(--color-border-accent)",
+  graphBg: "var(--color-graph-bg)",
+  graphToolbarBg: "var(--color-graph-toolbar-bg)",
+  graphToolbarBorder: "var(--color-graph-toolbar-border)",
+  graphPanelBg: "var(--color-graph-panel-bg)",
+  graphPanelBorder: "var(--color-graph-panel-border)",
+  graphGrid: "var(--color-graph-grid)",
+  graphLegendBg: "var(--color-graph-legend-bg)",
+  graphLegendText: "var(--color-graph-legend-text)",
+  graphEdgeSeq: "var(--color-graph-edge-seq)",
+  graphEdgeEntity: "var(--color-graph-edge-entity)",
+  graphHintBg: "var(--color-graph-hint-bg)",
+  graphHintBorder: "var(--color-graph-hint-border)",
+  graphHintText: "var(--color-graph-hint-text)",
+  inverse: "var(--color-text-inverse)",
+} as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -139,19 +212,19 @@ function EventNodeComponent({ data, selected }: NodeProps) {
       <Handle
         type="target"
         position={isLR ? Position.Left : Position.Top}
-        style={{ width: 9, height: 9, background: pal.border, border: "2px solid white" }}
+        style={{ width: 9, height: 9, background: pal.border, border: `2px solid ${GRAPH_COLORS.surfaceCard}` }}
       />
 
       <div
         style={{
           width: 284,
           background: pal.bg,
-          border: `2px solid ${selected ? "#1E3A5F" : pal.border}`,
+          border: `2px solid ${selected ? GRAPH_COLORS.borderAccent : pal.border}`,
           borderRadius: 12,
           padding: "10px 13px 11px",
           boxShadow: selected
-            ? "0 0 0 3px rgba(30,58,95,0.22), 0 6px 18px rgba(0,0,0,0.14)"
-            : `0 2px 8px rgba(0,0,0,0.07)`,
+            ? "0 0 0 3px color-mix(in oklab, var(--color-border-accent) 32%, transparent), 0 6px 18px rgba(0,0,0,0.14)"
+            : "0 2px 8px rgba(0,0,0,0.07)",
           cursor: "pointer",
           transition: "box-shadow 0.18s, border-color 0.18s",
           userSelect: "none",
@@ -160,21 +233,21 @@ function EventNodeComponent({ data, selected }: NodeProps) {
         {/* Top row: date + index + contradiction badge */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <CalendarDays style={{ width: 11, height: 11, color: "#667085", flexShrink: 0 }} />
-            <span style={{ fontSize: 10, color: "#667085", fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.02em" }}>
+            <CalendarDays style={{ width: 11, height: 11, color: GRAPH_COLORS.textMuted, flexShrink: 0 }} />
+            <span style={{ fontSize: 10, color: GRAPH_COLORS.textMuted, fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.02em" }}>
               {d.event.date}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <span style={{
-              fontSize: 9, fontWeight: 800, background: "#1E3A5F", color: "white",
+              fontSize: 9, fontWeight: 800, background: GRAPH_COLORS.accentStrong, color: GRAPH_COLORS.inverse,
               borderRadius: 100, padding: "1px 7px",
             }}>
               #{d.index + 1}
             </span>
             {d.contradictions.length > 0 && (
               <span style={{
-                fontSize: 9, fontWeight: 700, background: pal.badge, color: "white",
+                fontSize: 9, fontWeight: 700, background: pal.badge, color: GRAPH_COLORS.inverse,
                 borderRadius: 100, padding: "1px 7px",
                 display: "flex", alignItems: "center", gap: 3,
               }}>
@@ -195,7 +268,9 @@ function EventNodeComponent({ data, selected }: NodeProps) {
 
         {/* Category pill */}
         <span style={{
-          fontSize: 9, background: "rgba(0,0,0,0.055)", color: pal.text,
+          fontSize: 9,
+          background: "color-mix(in oklab, var(--color-surface-muted) 70%, transparent)",
+          color: pal.text,
           borderRadius: 100, padding: "2px 9px", fontWeight: 600, display: "inline-block",
         }}>
           {d.event.category}
@@ -205,7 +280,7 @@ function EventNodeComponent({ data, selected }: NodeProps) {
       <Handle
         type="source"
         position={isLR ? Position.Right : Position.Bottom}
-        style={{ width: 9, height: 9, background: pal.border, border: "2px solid white" }}
+        style={{ width: 9, height: 9, background: pal.border, border: `2px solid ${GRAPH_COLORS.surfaceCard}` }}
       />
     </>
   );
@@ -231,19 +306,19 @@ function EntityNodeComponent({ data, selected }: NodeProps) {
       <Handle
         type="target"
         position={isLR ? Position.Left : Position.Top}
-        style={{ width: 7, height: 7, background: pal.border, border: "2px solid white", opacity: 0.8 }}
+        style={{ width: 7, height: 7, background: pal.border, border: `2px solid ${GRAPH_COLORS.surfaceCard}`, opacity: 0.8 }}
       />
 
       <div
         style={{
           width: 172,
           background: selected ? pal.dimBg : pal.bg,
-          border: `2px solid ${selected ? "#1E3A5F" : pal.border}`,
+          border: `2px solid ${selected ? GRAPH_COLORS.borderAccent : pal.border}`,
           borderRadius: 40,
           padding: "9px 16px",
           display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
           boxShadow: selected
-            ? "0 0 0 3px rgba(30,58,95,0.2), 0 4px 10px rgba(0,0,0,0.1)"
+            ? "0 0 0 3px color-mix(in oklab, var(--color-border-accent) 30%, transparent), 0 4px 10px rgba(0,0,0,0.1)"
             : "0 1px 4px rgba(0,0,0,0.07)",
           cursor: "pointer",
           transition: "box-shadow 0.18s, border-color 0.18s",
@@ -268,7 +343,7 @@ function EntityNodeComponent({ data, selected }: NodeProps) {
       <Handle
         type="source"
         position={isLR ? Position.Right : Position.Bottom}
-        style={{ width: 7, height: 7, background: pal.border, border: "2px solid white", opacity: 0.8 }}
+        style={{ width: 7, height: 7, background: pal.border, border: `2px solid ${GRAPH_COLORS.surfaceCard}`, opacity: 0.8 }}
       />
     </>
   );
@@ -296,6 +371,11 @@ function buildGraphData(
 ): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const severityEdgeColor: Record<ContradictionData["severity"], string> = {
+    HIGH: "var(--color-severity-high-solid)",
+    MEDIUM: "var(--color-severity-medium-solid)",
+    LOW: "var(--color-severity-low-solid)",
+  };
 
   // Map: event index → contradictions referencing it
   const contraByEvent = new Map<number, ContradictionData[]>();
@@ -330,11 +410,11 @@ function buildGraphData(
           source: `event-${i}`,
           target: `event-${i + 1}`,
           type: "smoothstep",
-          style: { stroke: "#93AEED", strokeWidth: 1.5 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#93AEED", width: 14, height: 14 },
+          style: { stroke: GRAPH_COLORS.graphEdgeSeq, strokeWidth: 1.5 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: GRAPH_COLORS.graphEdgeSeq, width: 14, height: 14 },
           label: "sonraki",
-          labelStyle: { fontSize: 9, fill: "#93AEED", fontWeight: 600 },
-          labelBgStyle: { fill: "white", opacity: 0.8 },
+          labelStyle: { fontSize: 9, fill: GRAPH_COLORS.graphEdgeSeq, fontWeight: 600 },
+          labelBgStyle: { fill: GRAPH_COLORS.surfaceCard, opacity: 0.85 },
           labelBgPadding: [3, 7] as [number, number],
           labelBgBorderRadius: 4,
         });
@@ -347,9 +427,7 @@ function buildGraphData(
     const ids = c.involved_event_ids;
     for (let i = 0; i < ids.length; i++) {
       for (let j = i + 1; j < ids.length; j++) {
-        const stroke =
-          c.severity === "HIGH"   ? "#DC2626" :
-          c.severity === "MEDIUM" ? "#D97706" : "#3B82F6";
+        const stroke = severityEdgeColor[c.severity];
         const sw = c.severity === "HIGH" ? 2.5 : 2;
         const label = `⚠ ${truncate(c.title, 30)}`;
 
@@ -363,7 +441,7 @@ function buildGraphData(
           markerEnd: { type: MarkerType.ArrowClosed, color: stroke, width: 14, height: 14 },
           label,
           labelStyle: { fontSize: 9, fill: stroke, fontWeight: 700 },
-          labelBgStyle: { fill: "white", opacity: 0.93 },
+          labelBgStyle: { fill: GRAPH_COLORS.surfaceCard, opacity: 0.93 },
           labelBgPadding: [4, 9] as [number, number],
           labelBgBorderRadius: 5,
         });
@@ -401,11 +479,11 @@ function buildGraphData(
           source: safeId,
           target: `event-${eventIdx}`,
           type: "smoothstep",
-          style: { stroke: "#CBD5E1", strokeWidth: 1.2 },
-          markerEnd: { type: MarkerType.Arrow, color: "#CBD5E1", width: 10, height: 10 },
+          style: { stroke: GRAPH_COLORS.graphEdgeEntity, strokeWidth: 1.2 },
+          markerEnd: { type: MarkerType.Arrow, color: GRAPH_COLORS.graphEdgeEntity, width: 10, height: 10 },
           label: "katıldı",
-          labelStyle: { fontSize: 8, fill: "#94A3B8" },
-          labelBgStyle: { fill: "white", opacity: 0.7 },
+          labelStyle: { fontSize: 8, fill: GRAPH_COLORS.textMuted, fontWeight: 600 },
+          labelBgStyle: { fill: GRAPH_COLORS.surfaceCard, opacity: 0.7 },
           labelBgPadding: [2, 5] as [number, number],
           labelBgBorderRadius: 3,
         });
@@ -435,12 +513,12 @@ function NodeDetailPanel({
     const pal = SEV_PALETTE[topSev];
 
     return (
-      <div className="flex flex-col h-full bg-white overflow-hidden">
+      <div className="flex flex-col h-full bg-surface-card overflow-hidden">
         {/* Header */}
         <div style={{ background: `${pal.border}18`, borderBottom: `3px solid ${pal.border}`, padding: "14px 16px", flexShrink: 0 }}>
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p style={{ fontSize: 9, fontWeight: 700, color: "#667085", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
+              <p style={{ fontSize: 9, fontWeight: 700, color: GRAPH_COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
                 Olay #{d.index + 1} — {d.event.category}
               </p>
               <p style={{ fontSize: 11, fontFamily: "monospace", color: pal.border, fontWeight: 800 }}>
@@ -458,7 +536,11 @@ function NodeDetailPanel({
                 </div>
               )}
             </div>
-            <button onClick={onClose} className="text-[#98A2B3] hover:text-[#344054] transition-colors p-1">
+            <button
+              onClick={onClose}
+              className="text-text-subtle hover:text-text-secondary transition-colors p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+              aria-label="Detay panelini kapat"
+            >
               <X style={{ width: 16, height: 16 }} />
             </button>
           </div>
@@ -468,7 +550,7 @@ function NodeDetailPanel({
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Description */}
           <Section label="Açıklama" icon={<FileText className="w-3.5 h-3.5" />}>
-            <p style={{ fontSize: 12, color: "#344054", lineHeight: 1.75 }}>
+            <p style={{ fontSize: 12, color: GRAPH_COLORS.textSecondary, lineHeight: 1.75 }}>
               {d.event.description}
             </p>
           </Section>
@@ -480,10 +562,8 @@ function NodeDetailPanel({
                 {d.event.entities.map((e, i) => (
                   <span
                     key={i}
-                    style={{
-                      fontSize: 10, background: "#F9FAFB", border: "1px solid #E4E7EC",
-                      borderRadius: 100, padding: "3px 10px", color: "#344054", fontWeight: 500,
-                    }}
+                    className="text-[10px] bg-surface-page border border-border-subtle rounded-full px-2.5 py-[3px] text-text-secondary"
+                    style={{ fontWeight: 500 }}
                   >
                     {e}
                   </span>
@@ -494,17 +574,17 @@ function NodeDetailPanel({
 
           {/* Significance */}
           {d.event.significance && (
-            <div style={{
-              background: "#FFFAEB", border: "1px solid #FDE68A",
-              borderRadius: 10, padding: "11px 13px",
-            }}>
+            <div
+              style={{ borderRadius: 10, padding: "11px 13px" }}
+              className="bg-severity-medium-bg border border-severity-medium-border"
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
-                <Lightbulb style={{ width: 13, height: 13, color: "#D97706" }} />
-                <span style={{ fontSize: 9, fontWeight: 700, color: "#92400E", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                <Lightbulb style={{ width: 13, height: 13, color: "var(--color-severity-medium-solid)" }} />
+                <span style={{ fontSize: 9, fontWeight: 700, color: "var(--color-severity-medium-text)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   Hukuki Önem
                 </span>
               </div>
-              <p style={{ fontSize: 11, color: "#78350F", lineHeight: 1.7, margin: 0 }}>
+              <p style={{ fontSize: 11, color: "var(--color-severity-medium-text)", lineHeight: 1.7, margin: 0 }}>
                 {d.event.significance}
               </p>
             </div>
@@ -514,7 +594,7 @@ function NodeDetailPanel({
           {d.contradictions.length > 0 && (
             <Section
               label={`Çelişkiler (${d.contradictions.length})`}
-              icon={<AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
+              icon={<AlertTriangle className="w-3.5 h-3.5 text-severity-high-solid" />}
             >
               <div className="space-y-2.5">
                 {d.contradictions.map((c, i) => {
@@ -536,8 +616,8 @@ function NodeDetailPanel({
                       </p>
                       {c.legal_basis && (
                         <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 7 }}>
-                          <BookOpen style={{ width: 10, height: 10, color: "#7C3AED" }} />
-                          <span style={{ fontSize: 9, color: "#5B21B6", fontWeight: 600 }}>
+                          <BookOpen style={{ width: 10, height: 10, color: "var(--color-text-accent)" }} />
+                          <span style={{ fontSize: 9, color: "var(--color-text-accent)", fontWeight: 600 }}>
                             {c.legal_basis}
                           </span>
                         </div>
@@ -559,7 +639,7 @@ function NodeDetailPanel({
     const KindIcon = d.kind === "court" ? ScaleIcon : d.kind === "organization" ? Building2 : User;
 
     return (
-      <div className="flex flex-col h-full bg-white overflow-hidden">
+      <div className="flex flex-col h-full bg-surface-card overflow-hidden">
         {/* Header */}
         <div style={{ background: pal.dimBg, borderBottom: `3px solid ${pal.border}`, padding: "14px 16px", flexShrink: 0 }}>
           <div className="flex items-start justify-between gap-2">
@@ -569,7 +649,7 @@ function NodeDetailPanel({
                 background: pal.border, display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <KindIcon style={{ width: 17, height: 17, color: "white" }} />
+                <KindIcon style={{ width: 17, height: 17, color: GRAPH_COLORS.inverse }} />
               </div>
               <div>
                 <p style={{ fontSize: 12, fontWeight: 700, color: pal.text, marginBottom: 2 }}>
@@ -580,7 +660,11 @@ function NodeDetailPanel({
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="text-[#98A2B3] hover:text-[#344054] transition-colors p-1">
+            <button
+              onClick={onClose}
+              className="text-text-subtle hover:text-text-secondary transition-colors p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+              aria-label="Detay panelini kapat"
+            >
               <X style={{ width: 16, height: 16 }} />
             </button>
           </div>
@@ -596,23 +680,20 @@ function NodeDetailPanel({
                 return (
                   <div
                     key={idx}
-                    style={{
-                      background: "#F9FAFB", border: "1px solid #E4E7EC",
-                      borderRadius: 9, padding: "10px 12px",
-                    }}
+                    className="bg-surface-page border border-border-subtle rounded-[9px] px-3 py-2.5"
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 9, fontFamily: "monospace", color: "#667085", fontWeight: 700 }}>
+                      <span style={{ fontSize: 9, fontFamily: "monospace", color: GRAPH_COLORS.textMuted, fontWeight: 700 }}>
                         {event.date}
                       </span>
                       <span style={{
-                        fontSize: 9, fontWeight: 800, background: "#1E3A5F", color: "white",
+                        fontSize: 9, fontWeight: 800, background: GRAPH_COLORS.accentStrong, color: GRAPH_COLORS.inverse,
                         borderRadius: 100, padding: "1px 7px",
                       }}>
                         #{idx + 1}
                       </span>
                     </div>
-                    <p style={{ fontSize: 11, color: "#344054", lineHeight: 1.55, margin: 0 }}>
+                    <p style={{ fontSize: 11, color: GRAPH_COLORS.textSecondary, lineHeight: 1.55, margin: 0 }}>
                       {truncate(event.description, 110)}
                     </p>
                   </div>
@@ -641,8 +722,8 @@ function Section({
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-        <span style={{ color: "#667085" }}>{icon}</span>
-        <span style={{ fontSize: 9, fontWeight: 700, color: "#344054", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+        <span className="text-text-muted">{icon}</span>
+        <span className="text-[9px] font-bold text-text-secondary uppercase tracking-[0.07em]">
           {label}
         </span>
       </div>
@@ -667,20 +748,23 @@ function ToggleRow({
   return (
     <button
       onClick={() => onChange(!value)}
+      aria-pressed={value}
       style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         gap: 10, background: "none", border: "none", cursor: "pointer", padding: 0,
         width: "100%",
       }}
     >
-      <span style={{ fontSize: 10, color: "#344054", fontWeight: 500 }}>{label}</span>
-      <div style={{
-        width: 30, height: 16, borderRadius: 100,
-        background: value ? "#1E3A5F" : "#D0D5DD",
-        position: "relative", flexShrink: 0, transition: "background 0.2s",
-      }}>
+      <span className="text-[10px] text-text-secondary" style={{ fontWeight: 500 }}>
+        {label}
+      </span>
+      <div
+        className={`w-[30px] h-4 rounded-full relative shrink-0 transition-colors ${
+          value ? "bg-accent-primary-strong dark:bg-accent-primary" : "bg-border-default dark:bg-border-subtle"
+        }`}
+      >
         <div style={{
-          width: 12, height: 12, borderRadius: "50%", background: "white",
+          width: 12, height: 12, borderRadius: "50%", background: GRAPH_COLORS.inverse,
           position: "absolute", top: 2,
           left: value ? 16 : 2, transition: "left 0.2s",
           boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
@@ -747,14 +831,29 @@ export function GraphView({ data }: GraphViewProps) {
     contras:   edges.filter((e) => e.id.startsWith("contra-")).length,
   }), [nodes, edges]);
 
+  const [isDarkMode, setIsDarkMode] = useState(
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  );
+  const graphHeight = "clamp(420px, 68vh, 760px)";
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(root.classList.contains("dark"));
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="w-full rounded-2xl overflow-hidden border border-[#E4E7EC]" style={{ background: "#F8FAFC" }}>
+    <div className="w-full rounded-2xl overflow-hidden border border-graph-panel-border bg-graph-bg">
       {/* ── Toolbar ──────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-4 px-5 py-3 bg-white border-b border-[#E4E7EC] flex-wrap">
+      <div className="flex items-center gap-4 px-5 py-3 bg-graph-toolbar-bg border-b border-graph-toolbar-border flex-wrap">
         {/* Title */}
         <div className="flex items-center gap-2 mr-2">
-          <GitMerge className="w-4 h-4 text-[#1E3A5F]" />
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#1E3A5F" }}>
+          <GitMerge className="w-4 h-4 text-text-accent" />
+          <span className="text-[13px] font-bold text-text-primary">
             İlişki Haritası
           </span>
         </div>
@@ -762,9 +861,9 @@ export function GraphView({ data }: GraphViewProps) {
         {/* Stats pills */}
         <div className="flex gap-2">
           {[
-            { label: "Olay",    value: stats.events,   color: "#1E3A5F", bg: "#EEF4FF" },
-            { label: "Varlık",  value: stats.entities, color: "#16A34A", bg: "#F0FDF4" },
-            { label: "Çelişki", value: stats.contras,  color: "#DC2626", bg: "#FEF2F2" },
+            { label: "Olay", value: stats.events, color: "var(--color-text-accent)", bg: "var(--color-surface-soft)" },
+            { label: "Varlık", value: stats.entities, color: "var(--color-text-success)", bg: "var(--color-surface-success)" },
+            { label: "Çelişki", value: stats.contras, color: "var(--color-severity-high-solid)", bg: "var(--color-severity-high-bg)" },
           ].map((s) => (
             <span
               key={s.label}
@@ -779,21 +878,22 @@ export function GraphView({ data }: GraphViewProps) {
           ))}
         </div>
 
-        <div style={{ height: 20, width: 1, background: "#E4E7EC", flexShrink: 0 }} />
+        <div style={{ height: 20, width: 1, background: GRAPH_COLORS.graphToolbarBorder, flexShrink: 0 }} />
 
         {/* Layout toggle */}
         <div className="flex gap-1.5 items-center">
-          <span style={{ fontSize: 10, color: "#667085", fontWeight: 600 }}>Düzen:</span>
+          <span style={{ fontSize: 10, color: GRAPH_COLORS.textMuted, fontWeight: 600 }}>Düzen:</span>
           {(["TB", "LR"] as LayoutDirection[]).map((dir) => (
             <button
               key={dir}
               onClick={() => setLayoutDir(dir)}
+              aria-pressed={layoutDir === dir}
               style={{
                 padding: "4px 10px", fontSize: 10, fontWeight: 600,
                 borderRadius: 6, cursor: "pointer",
-                border: `1px solid ${layoutDir === dir ? "#1E3A5F" : "#E4E7EC"}`,
-                background: layoutDir === dir ? "#1E3A5F" : "white",
-                color: layoutDir === dir ? "white" : "#667085",
+                border: `1px solid ${layoutDir === dir ? GRAPH_COLORS.borderAccent : GRAPH_COLORS.graphToolbarBorder}`,
+                background: layoutDir === dir ? GRAPH_COLORS.accentStrong : GRAPH_COLORS.graphPanelBg,
+                color: layoutDir === dir ? GRAPH_COLORS.inverse : GRAPH_COLORS.textMuted,
                 display: "flex", alignItems: "center", gap: 4, transition: "all 0.15s",
               }}
             >
@@ -805,7 +905,7 @@ export function GraphView({ data }: GraphViewProps) {
           ))}
         </div>
 
-        <div style={{ height: 20, width: 1, background: "#E4E7EC", flexShrink: 0 }} />
+        <div style={{ height: 20, width: 1, background: GRAPH_COLORS.graphToolbarBorder, flexShrink: 0 }} />
 
         {/* Toggles */}
         <div className="flex gap-4 items-center">
@@ -816,13 +916,14 @@ export function GraphView({ data }: GraphViewProps) {
         {/* Min appearances */}
         {showEntities && (
           <div className="flex items-center gap-2 ml-1">
-            <span style={{ fontSize: 10, color: "#667085", fontWeight: 600, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 10, color: GRAPH_COLORS.textMuted, fontWeight: 600, whiteSpace: "nowrap" }}>
               Min. {minApps}+ olay:
             </span>
             <input
               type="range" min={1} max={5} value={minApps}
               onChange={(e) => setMinApps(Number(e.target.value))}
-              style={{ width: 64, accentColor: "#1E3A5F", cursor: "pointer" }}
+              style={{ width: 64, accentColor: "var(--color-accent-primary)", cursor: "pointer" }}
+              aria-label="Minimum görünme sayısı"
             />
           </div>
         )}
@@ -830,14 +931,8 @@ export function GraphView({ data }: GraphViewProps) {
         {/* Fit view */}
         <button
           onClick={() => rfRef.current?.fitView({ padding: 0.14, duration: 420 })}
-          style={{
-            marginLeft: "auto", padding: "5px 12px", fontSize: 10, fontWeight: 600,
-            borderRadius: 7, border: "1px solid #E4E7EC", background: "#F9FAFB",
-            color: "#344054", cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
-            transition: "all 0.15s",
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = "#F2F4F7")}
-          onMouseOut={(e)  => (e.currentTarget.style.background = "#F9FAFB")}
+          className="ml-auto px-3 py-[5px] text-[10px] font-semibold rounded-[7px] border border-graph-panel-border bg-graph-panel-bg text-text-secondary hover:bg-surface-muted transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+          aria-label="Grafiğin tamamını göster"
         >
           <ZoomIn style={{ width: 11, height: 11 }} />
           Tümünü Göster
@@ -845,7 +940,7 @@ export function GraphView({ data }: GraphViewProps) {
       </div>
 
       {/* ── Canvas + Detail panel ─────────────────────────────────────── */}
-      <div style={{ display: "flex", height: 600 }}>
+      <div style={{ display: "flex", height: graphHeight }}>
         {/* React Flow canvas */}
         <div style={{ flex: 1, position: "relative", minWidth: 0 }}>
           <ReactFlow
@@ -857,6 +952,7 @@ export function GraphView({ data }: GraphViewProps) {
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             onInit={onInit}
+            key={`graph-${isDarkMode ? "dark" : "light"}`}
             fitView
             fitViewOptions={{ padding: 0.14 }}
             minZoom={0.15}
@@ -869,7 +965,7 @@ export function GraphView({ data }: GraphViewProps) {
               variant={BackgroundVariant.Dots}
               gap={18}
               size={1.2}
-              color="#D1D5DB"
+              color={GRAPH_COLORS.graphGrid}
             />
 
             {/* Zoom / pan controls */}
@@ -884,20 +980,26 @@ export function GraphView({ data }: GraphViewProps) {
                 bottom: 20,
                 right: selectedNode ? 360 : 20,
                 transition: "right 0.26s ease",
-                background: "#F8FAFC",
+                background: GRAPH_COLORS.graphPanelBg,
                 borderRadius: 8,
-                border: "1px solid #E4E7EC",
+                border: `1px solid ${GRAPH_COLORS.graphPanelBorder}`,
               }}
               nodeColor={(n) => {
                 if (n.type === "eventNode") {
                   const d = n.data as EventNodeData;
                   const sev = d.contradictions[0]?.severity;
-                  return sev === "HIGH" ? "#DC2626" : sev === "MEDIUM" ? "#D97706" : sev === "LOW" ? "#3B82F6" : "#1E3A5F";
+                  return sev === "HIGH"
+                    ? "var(--color-severity-high-solid)"
+                    : sev === "MEDIUM"
+                    ? "var(--color-severity-medium-solid)"
+                    : sev === "LOW"
+                    ? "var(--color-severity-low-solid)"
+                    : "var(--color-accent-primary-strong)";
                 }
                 if (n.type === "entityNode") {
                   return KIND_PALETTE[(n.data as EntityNodeData).kind].border;
                 }
-                return "#667085";
+                return GRAPH_COLORS.textMuted;
               }}
               nodeStrokeWidth={2}
             />
@@ -905,40 +1007,40 @@ export function GraphView({ data }: GraphViewProps) {
             {/* Legend */}
             <Panel position="bottom-left" style={{ bottom: 80, left: 20 }}>
               <div style={{
-                background: "white", borderRadius: 10, border: "1px solid #E4E7EC",
+                background: GRAPH_COLORS.graphLegendBg, borderRadius: 10, border: `1px solid ${GRAPH_COLORS.graphPanelBorder}`,
                 padding: "10px 13px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               }}>
-                <p style={{ fontSize: 8, fontWeight: 700, color: "#667085", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 7 }}>
+                <p style={{ fontSize: 8, fontWeight: 700, color: GRAPH_COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 7 }}>
                   Açıklama
                 </p>
                 {/* Edge types */}
                 {[
-                  { stroke: "#DC2626", dash: true,  label: "Yüksek Çelişki (animasyonlu)" },
-                  { stroke: "#D97706", dash: true,  label: "Orta Çelişki" },
-                  { stroke: "#3B82F6", dash: true,  label: "Düşük Çelişki" },
-                  { stroke: "#93AEED", dash: false, label: "Kronolojik Sıra" },
-                  { stroke: "#CBD5E1", dash: false, label: "Katılım (Varlık → Olay)" },
+                  { stroke: "var(--color-severity-high-solid)", dash: true, label: "Yüksek Çelişki (animasyonlu)" },
+                  { stroke: "var(--color-severity-medium-solid)", dash: true, label: "Orta Çelişki" },
+                  { stroke: "var(--color-severity-low-solid)", dash: true, label: "Düşük Çelişki" },
+                  { stroke: "var(--color-graph-edge-seq)", dash: false, label: "Kronolojik Sıra" },
+                  { stroke: "var(--color-graph-edge-entity)", dash: false, label: "Katılım (Varlık → Olay)" },
                 ].map(({ stroke, dash, label }) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                     <svg width={22} height={6} style={{ flexShrink: 0 }}>
                       <line x1={0} y1={3} x2={22} y2={3} stroke={stroke} strokeWidth={1.5}
                         strokeDasharray={dash ? "5 3" : undefined} />
                     </svg>
-                    <span style={{ fontSize: 9, color: "#475569" }}>{label}</span>
+                    <span style={{ fontSize: 9, color: GRAPH_COLORS.graphLegendText }}>{label}</span>
                   </div>
                 ))}
-                <div style={{ height: 1, background: "#F2F4F7", margin: "6px 0" }} />
+                <div style={{ height: 1, background: GRAPH_COLORS.graphPanelBorder, margin: "6px 0" }} />
                 {/* Node types */}
                 {[
-                  { bg: "#FEF2F2", border: "#DC2626", label: "Olay — Yüksek Önem" },
-                  { bg: "#FFFBEB", border: "#D97706", label: "Olay — Orta Önem" },
-                  { bg: "#F0FDF4", border: "#16A34A", label: "Varlık — Kuruluş" },
-                  { bg: "#EFF6FF", border: "#2563EB", label: "Varlık — Kişi" },
-                  { bg: "#F5F3FF", border: "#7C3AED", label: "Varlık — Mahkeme" },
+                  { bg: "var(--color-severity-high-bg)", border: "var(--color-severity-high-solid)", label: "Olay — Yüksek Önem" },
+                  { bg: "var(--color-severity-medium-bg)", border: "var(--color-severity-medium-solid)", label: "Olay — Orta Önem" },
+                  { bg: "var(--color-surface-success)", border: "var(--color-severity-none-solid)", label: "Varlık — Kuruluş" },
+                  { bg: "var(--color-severity-low-bg)", border: "var(--color-severity-low-solid)", label: "Varlık — Kişi" },
+                  { bg: "var(--color-surface-info)", border: "var(--color-text-accent)", label: "Varlık — Mahkeme" },
                 ].map(({ bg, border, label }) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
                     <div style={{ width: 12, height: 8, borderRadius: 2, border: `1.5px solid ${border}`, background: bg, flexShrink: 0 }} />
-                    <span style={{ fontSize: 9, color: "#475569" }}>{label}</span>
+                    <span style={{ fontSize: 9, color: GRAPH_COLORS.graphLegendText }}>{label}</span>
                   </div>
                 ))}
               </div>
@@ -952,10 +1054,10 @@ export function GraphView({ data }: GraphViewProps) {
             width: selectedNode ? 340 : 0,
             overflow: "hidden",
             transition: "width 0.26s cubic-bezier(0.4,0,0.2,1)",
-            borderLeft: selectedNode ? "1px solid #E4E7EC" : "none",
-            background: "white",
+            borderLeft: selectedNode ? `1px solid ${GRAPH_COLORS.graphPanelBorder}` : "none",
+            background: GRAPH_COLORS.graphPanelBg,
             flexShrink: 0,
-            height: 600,
+            height: graphHeight,
           }}
         >
           {selectedNode && (
@@ -969,8 +1071,8 @@ export function GraphView({ data }: GraphViewProps) {
       </div>
 
       {/* ── Instruction hint bar ──────────────────────────────────────── */}
-      <div className="px-5 py-2.5 bg-[#F8FAFC] border-t border-[#E4E7EC] flex items-center gap-4 flex-wrap">
-        <span style={{ fontSize: 10, color: "#94A3B8" }}>
+      <div className="px-5 py-2.5 bg-graph-hint-bg border-t border-graph-hint-border flex items-center gap-4 flex-wrap">
+        <span className="text-[10px] text-graph-hint-text">
           💡 Bir düğüme tıklayarak ayrıntılarını görüntüleyin.
           Kırmızı kesik çizgiler = tespit edilen çelişkiler.
           Araç çubuğundan görünümü özelleştirin.

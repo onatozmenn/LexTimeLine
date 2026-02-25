@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import type { AnalysisResultData } from "./TimelineView";
 import type { ContradictionData } from "./ContradictionCard";
+import { LEX_AI_MODEL } from "../constants/ai";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -56,7 +57,10 @@ interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: Date;
+  source?: "server" | "mock";
 }
+
+type ChatResponseSource = "server" | "mock";
 
 interface ChatInterfaceProps {
   data: AnalysisResultData;
@@ -138,7 +142,7 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
       (ev.entities.length > 0 ? `**İlgili Taraflar:** ${ev.entities.join(" · ")}\n\n` : "") +
       (ev.significance        ? `**Hukuki Önem:** ${ev.significance}\n\n`              : "") +
       (flags.length > 0
-        ? `**⚠️ Bu olay ${flags.length} çelişkiye konu olmaktadır:**\n` +
+        ? `**⚠ Bu olay ${flags.length} çelişkiye konu olmaktadır:**\n` +
           flags.map((c) => `• **${c.title}** — ${sevLabel(c.severity)}`).join("\n")
         : "✅ Bu olayda herhangi bir çelişki tespit edilmemiştir.")
     );
@@ -177,10 +181,10 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
     const lowC  = contras.filter((c) => c.severity === "LOW");
     const riskStr =
       data.risk_level === "HIGH"   ? "🔴 YÜKSEK" :
-      data.risk_level === "MEDIUM" ? "🟡 ORTA"   : "🟢 DÜŞÜK";
+      data.risk_level === "MEDIUM" ? "🟡 ORTA"   : "🟢 DÜÜK";
 
     let r =
-      `**⚠️ Çelişki Analizi Raporu**\n\n` +
+      `**⚠ Çelişki Analizi Raporu**\n\n` +
       `Analizde **${contras.length} çelişki** tespit edilmiş olup genel risk seviyesi **${riskStr}** olarak değerlendirilmektedir.\n\n`;
 
     if (highC.length > 0) {
@@ -224,7 +228,7 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
       r += `• **${cite(i)}** (${e.date}): ${e.description.slice(0, 90)}${e.description.length > 90 ? "…" : ""}\n`;
     });
     if (ecList.length > 0) {
-      r += `\n**⚠️ Bu tarafla ilgili ${ecList.length} çelişki mevcuttur:**\n\n`;
+      r += `\n**⚠ Bu tarafla ilgili ${ecList.length} çelişki mevcuttur:**\n\n`;
       ecList.forEach((c) => {
         const refs = c.involved_event_ids.map((id) => cite(id)).join(", ");
         r += `• **${c.title}** (${sevLabel(c.severity)} — ${refs})\n`;
@@ -244,7 +248,7 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
     const highC   = contras.filter((c) => c.severity === "HIGH");
 
     let r =
-      `**⚖️ Hukuki Strateji Önerileri**\n\n` +
+      `**⚖ Hukuki Strateji Önerileri**\n\n` +
       `Mevcut dava analizi esas alınarak öncelikli eylemler:\n\n`;
 
     if (actions.length > 0) {
@@ -258,7 +262,7 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
     if (highC.length > 0) {
       const top  = highC[0];
       const refs = top.involved_event_ids.map((id) => cite(id)).join(" ve ");
-      r += `**⚠️ Öncelikli Dikkat:** ${refs} arasındaki **"${top.title}"** çelişkisi yargılamada belirleyici faktör olabilir.`;
+      r += `**⚠ Öncelikli Dikkat:** ${refs} arasındaki **"${top.title}"** çelişkisi yargılamada belirleyici faktör olabilir.`;
       if (top.legal_basis) r += `\n> *Hukuki dayanak: ${top.legal_basis}*`;
     }
     return r;
@@ -271,9 +275,9 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
     const riskStr =
       data.risk_level === "HIGH"   ? "🔴 YÜKSEK — Acil müdahale gerektirebilir"  :
       data.risk_level === "MEDIUM" ? "🟡 ORTA — Yakın takip önerilir"             :
-                                     "🟢 DÜŞÜK — Standart takip yeterli";
+                                     "🟢 DÜÜK — Standart takip yeterli";
     return (
-      `**🎯 Risk Değerlendirmesi**\n\n` +
+      `** Risk Değerlendirmesi**\n\n` +
       `**Genel Risk Seviyesi:** ${riskStr}\n\n` +
       (highC.length > 0
         ? `**🔴 Kritik Bulgular (${highC.length}):**\n` +
@@ -343,21 +347,23 @@ function generateMockResponse(query: string, data: AnalysisResultData): string {
 async function fetchChatResponse(
   query: string,
   data: AnalysisResultData,
-): Promise<string> {
+): Promise<{ answer: string; source: ChatResponseSource }> {
   try {
     const apiBase = import.meta.env.VITE_API_URL ?? "";
     const res = await fetch(`${apiBase}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, context: data, model: "gpt-4o" }),
+      body: JSON.stringify({ query, context: data, model: LEX_AI_MODEL }),
       signal: AbortSignal.timeout(25_000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
-    return (json.answer as string) || generateMockResponse(query, data);
+    const answer = (json.answer as string | undefined)?.trim();
+    if (answer) return { answer, source: "server" };
+    return { answer: generateMockResponse(query, data), source: "mock" };
   } catch {
     // Server not running — use the rich mock response engine
-    return generateMockResponse(query, data);
+    return { answer: generateMockResponse(query, data), source: "mock" };
   }
 }
 
@@ -379,9 +385,9 @@ function CitationBadge({
       onClick={() => onClick(eventIdx)}
       className="
         inline-flex items-center gap-1
-        bg-[#EEF4FF] hover:bg-[#2D6BE4]
-        text-[#1D4ED8] hover:text-white
-        border border-[#BFDBFE] hover:border-[#2D6BE4]
+        bg-surface-soft hover:bg-accent-primary
+        text-text-accent hover:text-text-inverse
+        border border-border-accent hover:border-border-accent
         rounded-md px-1.5 py-0.5 mx-0.5
         transition-all duration-150 cursor-pointer
         align-middle
@@ -408,7 +414,7 @@ function parseInline(
       {parts.map((part, i) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return (
-            <strong key={i} className="font-semibold text-[#101828]">
+            <strong key={i} className="font-semibold text-text-primary">
               {part.slice(2, -2)}
             </strong>
           );
@@ -451,8 +457,8 @@ function RichContent({
         if (bullet) {
           return (
             <div key={i} className="flex gap-2">
-              <span className="text-[#2D6BE4] font-bold flex-shrink-0 mt-px">•</span>
-              <span className="text-sm text-[#344054] leading-relaxed">
+              <span className="text-text-accent font-bold flex-shrink-0 mt-px">•</span>
+              <span className="text-sm text-text-secondary leading-relaxed">
                 {parseInline(bullet[1], onCitationClick)}
               </span>
             </div>
@@ -465,7 +471,7 @@ function RichContent({
           return (
             <div
               key={i}
-              className="border-l-2 border-[#FDE68A] pl-3 py-1 my-1 rounded-r text-xs text-[#92400E] italic bg-[#FFFAEB]"
+              className="border-l-2 border-severity-medium-border pl-3 py-1 my-1 rounded-r text-xs text-severity-medium-text italic bg-severity-medium-bg"
             >
               {parseInline(quote[1], onCitationClick)}
             </div>
@@ -473,14 +479,14 @@ function RichContent({
         }
 
         return (
-          <p key={i} className="text-sm text-[#344054] leading-relaxed">
+          <p key={i} className="text-sm text-text-secondary leading-relaxed">
             {parseInline(line, onCitationClick)}
           </p>
         );
       })}
       {isCursor && (
         <span
-          className="inline-block w-0.5 h-[14px] bg-[#2D6BE4] ml-0.5 align-middle animate-pulse"
+          className="inline-block w-0.5 h-[14px] bg-accent-primary ml-0.5 align-middle animate-pulse"
           style={{ verticalAlign: "text-bottom" }}
         />
       )}
@@ -490,7 +496,7 @@ function RichContent({
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Small UI atoms
-// ────────────────────────────────────────────────────��────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 function TypingIndicator() {
   return (
@@ -498,7 +504,7 @@ function TypingIndicator() {
       {[0, 1, 2].map((i) => (
         <motion.div
           key={i}
-          className="w-2 h-2 rounded-full bg-[#93AEED]"
+          className="w-2 h-2 rounded-full bg-accent-primary-subtle"
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 0.55, repeat: Infinity, delay: i * 0.15 }}
         />
@@ -517,12 +523,12 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[#F2F4F7]"
+      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-surface-muted"
       title="Kopyala"
     >
       {copied
-        ? <Check style={{ width: 12, height: 12, color: "#16A34A" }} />
-        : <Copy style={{ width: 12, height: 12, color: "#98A2B3" }} />
+        ? <Check className="w-3 h-3 text-severity-none-solid" />
+        : <Copy className="w-3 h-3 text-text-subtle" />
       }
     </button>
   );
@@ -545,12 +551,14 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
       `değerlendirmesi yapmak için sorularınızı yanıtlamaya hazırım.\n\n` +
       `**[Olay #N]** formatındaki referanslara tıklayarak ilgili olayı zaman çizelgesinde görüntüleyebilirsiniz.`,
     timestamp: new Date(),
+    source: "server",
   };
 
   const [messages, setMessages]       = useState<ChatMessage[]>([welcomeMsg]);
   const [input, setInput]             = useState("");
   const [isLoading, setIsLoading]     = useState(false);
   const [typingId, setTypingId]       = useState<string | null>(null);
+  const [isDegradedMode, setIsDegradedMode] = useState(false);
 
   const messagesEndRef  = useRef<HTMLDivElement>(null);
   const textareaRef     = useRef<HTMLTextAreaElement>(null);
@@ -611,6 +619,7 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
 
     const response = await fetchChatResponse(query, data);
     setIsLoading(false);
+    setIsDegradedMode(response.source === "mock");
 
     const aiMsgId = `a-${Date.now()}`;
     const aiMsg: ChatMessage = {
@@ -618,9 +627,10 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
       role: "assistant",
       content: "",          // filled by typewriter
       timestamp: new Date(),
+      source: response.source,
     };
     setMessages((prev) => [...prev, aiMsg]);
-    startTypewriter(response, aiMsgId);
+    startTypewriter(response.answer, aiMsgId);
   }, [input, isLoading, data, startTypewriter]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -636,77 +646,96 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
     setInput("");
     setIsLoading(false);
     setTypingId(null);
+    setIsDegradedMode(false);
   };
 
   const hasUserMessages = messages.some((m) => m.role === "user");
 
   // Risk badge
-  const riskColor =
-    data.risk_level === "HIGH"   ? "#DC2626" :
-    data.risk_level === "MEDIUM" ? "#D97706" : "#16A34A";
   const riskLabel =
     data.risk_level === "HIGH"   ? "Yüksek Risk" :
     data.risk_level === "MEDIUM" ? "Orta Risk"   :
     data.risk_level === "LOW"    ? "Düşük Risk"  : "Risk Yok";
+  const riskBadgeClass =
+    data.risk_level === "HIGH"
+      ? "bg-severity-high-bg text-severity-high-text border border-severity-high-border"
+      : data.risk_level === "MEDIUM"
+      ? "bg-severity-medium-bg text-severity-medium-text border border-severity-medium-border"
+      : "bg-severity-none-bg text-severity-none-text border border-severity-none-border";
+  const uniqueEntityCount = data.events
+    .flatMap((event) => event.entities)
+    .filter((value, index, arr) => arr.indexOf(value) === index).length;
 
   return (
-    <div className="flex flex-col bg-white dark:bg-[#1E293B] rounded-2xl border border-[#E4E7EC] dark:border-[#334155] overflow-hidden shadow-sm transition-colors duration-200"
+    <div
+      className="flex flex-col bg-surface-card rounded-2xl border border-border-subtle overflow-hidden shadow-sm transition-colors duration-200"
       style={{ minHeight: 600 }}
     >
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-[#1E3A5F] to-[#1E4B7A] px-5 py-4 flex items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-accent-primary-strong to-accent-primary px-5 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
             <Scale className="w-4 h-4 text-white" strokeWidth={1.8} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-white text-sm" style={{ fontWeight: 700 }}>
                 Dava Asistanı
               </span>
-              <span className="bg-white/20 text-white/90 text-[10px] rounded-full px-2 py-0.5"
-                style={{ fontWeight: 600 }}>
-                GPT-4o · RAG-lite
+              <span className="bg-white/20 text-white text-[10px] rounded-full px-2 py-0.5" style={{ fontWeight: 600 }}>
+                {LEX_AI_MODEL.toUpperCase()} · RAG-lite
               </span>
+              {isDegradedMode && (
+                <span
+                  className="bg-severity-medium-bg text-severity-medium-text border border-severity-medium-border text-[10px] rounded-full px-2 py-0.5"
+                  style={{ fontWeight: 600 }}
+                >
+                  Degrade Mod (Mock)
+                </span>
+              )}
             </div>
-            <p className="text-white/60 text-[10px] mt-0.5">
+            <p className="text-white/70 text-[10px] mt-0.5">
               Sağlanan dava bağlamına dayalı yanıtlar verilir
             </p>
           </div>
         </div>
 
-        {/* Context pills */}
         <div className="hidden sm:flex items-center gap-2">
-          {[
-            { label: `${data.total_events_found} Olay`,    bg: "bg-white/15", text: "text-white" },
-            { label: `${data.total_contradictions_found} Çelişki`, bg: "bg-white/15", text: "text-white" },
-          ].map((p) => (
-            <span key={p.label}
-              className={`${p.bg} ${p.text} text-[10px] rounded-full px-2.5 py-1`}
-              style={{ fontWeight: 600 }}>
-              {p.label}
-            </span>
-          ))}
-          <span
-            className="text-[10px] rounded-full px-2.5 py-1"
-            style={{ fontWeight: 600, background: `${riskColor}40`, color: "white" }}
-          >
+          <span className="bg-white/15 text-white text-[10px] rounded-full px-2.5 py-1" style={{ fontWeight: 600 }}>
+            {data.total_events_found} Olay
+          </span>
+          <span className="bg-white/15 text-white text-[10px] rounded-full px-2.5 py-1" style={{ fontWeight: 600 }}>
+            {data.total_contradictions_found} Çelişki
+          </span>
+          <span className={`text-[10px] rounded-full px-2.5 py-1 ${riskBadgeClass}`} style={{ fontWeight: 600 }}>
             {riskLabel}
           </span>
           <button
             onClick={handleClear}
-            className="text-white/60 hover:text-white transition-colors p-1 rounded"
+            className="text-white/70 hover:text-white transition-colors p-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
             title="Konuşmayı temizle"
+            aria-label="Konuşmayı temizle"
           >
             <RotateCcw style={{ width: 13, height: 13 }} />
           </button>
         </div>
       </div>
 
-      {/* ── Messages area ───────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-[#F9FAFB] dark:bg-[#0F172A] transition-colors duration-200"
-        style={{ minHeight: 380 }}>
+      {isDegradedMode && (
+        <div
+          className="px-5 py-2 bg-severity-medium-bg border-b border-severity-medium-border text-[11px] text-severity-medium-text"
+          role="status"
+          aria-live="polite"
+        >
+          Chat servisine erişilemedi. Yanıtlar geçici mock modunda üretiliyor.
+        </div>
+      )}
 
+      <div
+        className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-surface-page transition-colors duration-200"
+        style={{ minHeight: 380 }}
+        aria-live="polite"
+        aria-busy={isLoading}
+      >
         {messages.map((msg) => (
           <AnimatePresence key={msg.id}>
             <motion.div
@@ -717,14 +746,12 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
             >
               {msg.role === "assistant" && (
                 <div className="flex items-start gap-2.5 max-w-[84%] group">
-                  {/* AI avatar */}
-                  <div className="w-7 h-7 rounded-lg bg-[#1E3A5F] flex items-center justify-center flex-shrink-0 mt-1">
-                    <Scale style={{ width: 13, height: 13, color: "white" }} strokeWidth={1.8} />
+                  <div className="w-7 h-7 rounded-lg bg-accent-primary-strong flex items-center justify-center flex-shrink-0 mt-1">
+                    <Scale className="w-[13px] h-[13px] text-white" strokeWidth={1.8} />
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    {/* Bubble */}
-                    <div className="bg-white dark:bg-[#334155] rounded-2xl rounded-tl-md border border-[#E4E7EC] dark:border-[#475569] px-4 py-3 shadow-sm">
+                    <div className="bg-surface-card rounded-2xl rounded-tl-md border border-border-subtle px-4 py-3 shadow-sm">
                       <RichContent
                         text={msg.content || " "}
                         isCursor={typingId === msg.id}
@@ -732,11 +759,15 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
                       />
                     </div>
 
-                    {/* Meta row */}
                     <div className="flex items-center gap-1 pl-1">
-                      <span style={{ fontSize: 10, color: "#98A2B3" }}>
+                      <span className="text-[10px] text-text-subtle">
                         {msg.timestamp.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                       </span>
+                      {msg.source === "mock" && (
+                        <span className="text-[10px] text-severity-medium-text bg-severity-medium-bg border border-severity-medium-border rounded-full px-1.5 py-0.5">
+                          mock
+                        </span>
+                      )}
                       {typingId !== msg.id && <CopyButton text={msg.content} />}
                     </div>
                   </div>
@@ -746,18 +777,15 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
               {msg.role === "user" && (
                 <div className="flex items-start gap-2.5 max-w-[78%]">
                   <div className="flex flex-col items-end gap-1">
-                    <div
-                      className="rounded-2xl rounded-tr-md px-4 py-3 text-sm text-white leading-relaxed"
-                      style={{ background: "#1E3A5F" }}
-                    >
+                    <div className="rounded-2xl rounded-tr-md px-4 py-3 text-sm text-text-inverse leading-relaxed bg-accent-primary-strong">
                       {msg.content}
                     </div>
-                    <span style={{ fontSize: 10, color: "#98A2B3", paddingRight: 4 }}>
+                    <span className="text-[10px] text-text-subtle pr-1">
                       {msg.timestamp.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
-                  <div className="w-7 h-7 rounded-lg bg-[#E4E7EC] dark:bg-[#475569] flex items-center justify-center flex-shrink-0 mt-1">
-                    <User style={{ width: 13, height: 13, color: "#667085" }} />
+                  <div className="w-7 h-7 rounded-lg bg-surface-muted flex items-center justify-center flex-shrink-0 mt-1">
+                    <User className="w-[13px] h-[13px] text-text-muted" />
                   </div>
                 </div>
               )}
@@ -765,7 +793,6 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
           </AnimatePresence>
         ))}
 
-        {/* Typing indicator */}
         <AnimatePresence>
           {isLoading && (
             <motion.div
@@ -775,17 +802,16 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
               transition={{ duration: 0.2 }}
               className="flex items-start gap-2.5"
             >
-              <div className="w-7 h-7 rounded-lg bg-[#1E3A5F] flex items-center justify-center flex-shrink-0 mt-1">
-                <Scale style={{ width: 13, height: 13, color: "white" }} strokeWidth={1.8} />
+              <div className="w-7 h-7 rounded-lg bg-accent-primary-strong flex items-center justify-center flex-shrink-0 mt-1">
+                <Scale className="w-[13px] h-[13px] text-white" strokeWidth={1.8} />
               </div>
-              <div className="bg-white dark:bg-[#334155] rounded-2xl rounded-tl-md border border-[#E4E7EC] dark:border-[#475569] shadow-sm">
+              <div className="bg-surface-card rounded-2xl rounded-tl-md border border-border-subtle shadow-sm">
                 <TypingIndicator />
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Suggested question chips (only before first user message) */}
         <AnimatePresence>
           {!hasUserMessages && (
             <motion.div
@@ -795,7 +821,7 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
               transition={{ duration: 0.3, delay: 0.2 }}
               className="pt-1"
             >
-              <p style={{ fontSize: 10, color: "#98A2B3", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+              <p className="text-[10px] text-text-subtle font-semibold uppercase tracking-[0.06em] mb-2">
                 <Sparkles style={{ width: 10, height: 10, display: "inline", marginRight: 4 }} />
                 Önerilen Sorular
               </p>
@@ -810,13 +836,13 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
                     disabled={isLoading}
                     className="
                       flex items-center gap-1.5 text-left
-                      bg-white dark:bg-[#334155] hover:bg-[#EEF4FF] dark:hover:bg-[#1E3A5F] hover:border-[#2D6BE4]
-                      border border-[#E4E7EC] dark:border-[#475569] rounded-xl px-3 py-2
-                      transition-all duration-150 disabled:opacity-50
+                      bg-surface-card hover:bg-surface-soft hover:border-border-accent
+                      border border-border-subtle rounded-xl px-3 py-2
+                      text-text-secondary transition-all duration-150 disabled:opacity-50
                     "
-                    style={{ fontSize: 11, color: "#344054", fontWeight: 500, maxWidth: 300 }}
+                    style={{ fontSize: 11, fontWeight: 500, maxWidth: 300 }}
                   >
-                    <ChevronRight style={{ width: 11, height: 11, color: "#2D6BE4", flexShrink: 0 }} />
+                    <ChevronRight className="w-[11px] h-[11px] text-text-accent flex-shrink-0" />
                     {q}
                   </motion.button>
                 ))}
@@ -828,27 +854,29 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ── Context info bar ────────────────────────────────────────────── */}
-      <div className="px-5 py-2 bg-[#F2F4F7] dark:bg-[#1E293B] border-t border-[#E4E7EC] dark:border-[#334155] flex items-center gap-3 flex-wrap">
+      <div className="px-5 py-2 bg-surface-muted border-t border-border-subtle flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1.5">
-          <BookOpen style={{ width: 11, height: 11, color: "#98A2B3" }} />
-          <span style={{ fontSize: 10, color: "#98A2B3" }}>
-            Bağlam: {data.total_events_found} olay · {data.total_contradictions_found} çelişki · {data.events.flatMap((e) => e.entities).filter((v, i, a) => a.indexOf(v) === i).length} taraf
+          <BookOpen className="w-[11px] h-[11px] text-text-subtle" />
+          <span className="text-[10px] text-text-subtle">
+            Bağlam: {data.total_events_found} olay · {data.total_contradictions_found} çelişki · {uniqueEntityCount} taraf
           </span>
         </div>
-        <span style={{ fontSize: 10, color: "#CBD5E1" }}>·</span>
-        <span style={{ fontSize: 10, color: "#98A2B3" }}>
-          <span className="text-[#2D6BE4] font-semibold">[Olay #N]</span> etiketlerine tıklayarak zaman çizelgesine gidebilirsiniz
+        <span className="text-[10px] text-text-muted">·</span>
+        <span className="text-[10px] text-text-subtle">
+          <span className="text-text-accent font-semibold">[Olay #N]</span> etiketlerine tıklayarak zaman çizelgesine gidebilirsiniz
         </span>
       </div>
 
-      {/* ── Input area ──────────────────────────────────────────────────── */}
-      <div className="px-4 py-3 bg-white dark:bg-[#1E293B] border-t border-[#E4E7EC] dark:border-[#334155]">
-        <div className={`
-          flex items-end gap-2 rounded-xl border px-3 py-2
-          transition-all duration-150
-          ${isLoading ? "border-[#E4E7EC] dark:border-[#475569] bg-[#F9FAFB] dark:bg-[#0F172A]" : "border-[#D0D5DD] dark:border-[#475569] bg-white dark:bg-[#0F172A] focus-within:border-[#2D6BE4] focus-within:ring-2 focus-within:ring-[#EEF4FF]"}
-        `}>
+      <div className="px-4 py-3 bg-surface-card border-t border-border-subtle">
+        <div
+          className={`
+            flex items-end gap-2 rounded-xl border px-3 py-2
+            transition-all duration-150
+            ${isLoading
+              ? "border-border-subtle bg-surface-page"
+              : "border-border-default bg-surface-card focus-within:border-border-accent focus-within:ring-2 focus-within:ring-accent-primary-soft"}
+          `}
+        >
           <textarea
             ref={textareaRef}
             value={input}
@@ -857,23 +885,25 @@ export function ChatInterface({ data, onCitationClick }: ChatInterfaceProps) {
             placeholder={'Hukuki bir soru sorun… (Örn: "En önemli çelişkiyi açıkla")'}
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none bg-transparent outline-none text-sm text-[#101828] dark:text-white placeholder-[#98A2B3] disabled:cursor-not-allowed"
+            className="flex-1 resize-none bg-transparent outline-none text-sm text-text-primary placeholder-text-subtle disabled:cursor-not-allowed"
             style={{ lineHeight: 1.55, maxHeight: 96, minHeight: 24 }}
+            aria-label="Mesajınız"
           />
           <button
             onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
             className="
               w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mb-0.5
-              transition-all duration-150
-              disabled:opacity-40 disabled:cursor-not-allowed
-              bg-[#1E3A5F] hover:bg-[#2D6BE4] text-white
+              transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed
+              bg-accent-primary-strong hover:bg-accent-primary text-text-inverse
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-focus-ring
             "
+            aria-label="Mesaj gönder"
           >
             <Send style={{ width: 14, height: 14 }} />
           </button>
         </div>
-        <p style={{ fontSize: 9, color: "#CBD5E1", marginTop: 5, paddingLeft: 2 }}>
+        <p className="text-[9px] text-text-subtle mt-1.5 pl-0.5">
           Enter ↵ gönder · Shift+Enter yeni satır
         </p>
       </div>

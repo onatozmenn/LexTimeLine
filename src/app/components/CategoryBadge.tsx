@@ -4,19 +4,19 @@ interface CategoryBadgeProps {
 }
 
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
-  "Mahkeme İşlemi":     { bg: "bg-[#EEF4FF]", text: "text-[#3538CD]", dot: "bg-[#3538CD]" },
-  "Tanık İfadesi":      { bg: "bg-[#F0FDF4]", text: "text-[#15803D]", dot: "bg-[#15803D]" },
-  "Olay Anı":           { bg: "bg-[#FEF3F2]", text: "text-[#B42318]", dot: "bg-[#B42318]" },
-  "Sözleşme / Anlaşma": { bg: "bg-[#FFFAEB]", text: "text-[#B45309]", dot: "bg-[#B45309]" },
-  "Dilekçe / Başvuru":  { bg: "bg-[#F5F3FF]", text: "text-[#6D28D9]", dot: "bg-[#6D28D9]" },
-  "Karar / Hüküm":      { bg: "bg-[#F0F9FF]", text: "text-[#0369A1]", dot: "bg-[#0369A1]" },
-  "Tebligat / Bildirim":{ bg: "bg-[#FFF7ED]", text: "text-[#C2410C]", dot: "bg-[#C2410C]" },
-  "İdari İşlem":        { bg: "bg-[#F0FDF4]", text: "text-[#166534]", dot: "bg-[#166534]" },
-  "İcra Takibi":        { bg: "bg-[#FEF2F2]", text: "text-[#991B1B]", dot: "bg-[#991B1B]" },
-  "Diğer":              { bg: "bg-[#F9FAFB]", text: "text-[#374151]", dot: "bg-[#374151]" },
+  "Mahkeme İşlemi": { bg: "bg-surface-soft", text: "text-text-accent", dot: "bg-accent-primary" },
+  "Tanık İfadesi": { bg: "bg-severity-none-bg", text: "text-severity-none-text", dot: "bg-severity-none-solid" },
+  "Olay Anı": { bg: "bg-severity-high-bg", text: "text-severity-high-text", dot: "bg-severity-high-solid" },
+  "Sözleşme / Anlaşma": { bg: "bg-severity-medium-bg", text: "text-severity-medium-text", dot: "bg-severity-medium-solid" },
+  "Dilekçe / Başvuru": { bg: "bg-surface-info", text: "text-text-accent", dot: "bg-accent-primary" },
+  "Karar / Hüküm": { bg: "bg-surface-soft", text: "text-text-accent", dot: "bg-accent-primary-subtle" },
+  "Tebligat / Bildirim": { bg: "bg-severity-medium-bg", text: "text-severity-medium-text", dot: "bg-severity-medium-solid" },
+  "İdari İşlem": { bg: "bg-severity-none-bg", text: "text-severity-none-text", dot: "bg-severity-none-solid" },
+  "İcra Takibi": { bg: "bg-severity-high-bg", text: "text-severity-high-text", dot: "bg-severity-high-solid" },
+  "Diğer": { bg: "bg-surface-page", text: "text-text-secondary", dot: "bg-text-secondary" },
 };
 
-const DEFAULT_STYLE = { bg: "bg-[#F9FAFB]", text: "text-[#374151]", dot: "bg-[#374151]" };
+const DEFAULT_STYLE = { bg: "bg-surface-page", text: "text-text-secondary", dot: "bg-text-secondary" };
 
 export function CategoryBadge({ category, size = "md" }: CategoryBadgeProps) {
   const style = CATEGORY_STYLES[category] ?? DEFAULT_STYLE;

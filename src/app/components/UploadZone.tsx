@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { Upload, AlertCircle, Loader2 } from "lucide-react";
+import { LEX_AI_MODEL } from "../constants/ai";
 
 interface UploadZoneProps {
   onFileSelected: (file: File) => void;
@@ -31,7 +32,7 @@ export function UploadZone({ onFileSelected, isLoading }: UploadZoneProps) {
       setError(null);
       onFileSelected(file);
     },
-    [onFileSelected]
+    [onFileSelected],
   );
 
   const onDrop = useCallback(
@@ -41,7 +42,7 @@ export function UploadZone({ onFileSelected, isLoading }: UploadZoneProps) {
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     },
-    [handleFile]
+    [handleFile],
   );
 
   const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -68,11 +69,20 @@ export function UploadZone({ onFileSelected, isLoading }: UploadZoneProps) {
           rounded-2xl border-2 border-dashed p-16 cursor-pointer
           transition-all duration-200 select-none
           ${isDragging
-            ? "border-[#2D6BE4] bg-[#EEF4FF] dark:bg-[#1E3A5F] scale-[1.01]"
-            : "border-[#D0D5DD] dark:border-[#475569] bg-[#F9FAFB] dark:bg-[#0F172A] hover:border-[#2D6BE4] hover:bg-[#EEF4FF] dark:hover:bg-[#1E3A5F]"
+            ? "border-border-accent bg-surface-soft scale-[1.01]"
+            : "border-border-default bg-surface-page hover:border-border-accent hover:bg-surface-soft"
           }
           ${isLoading ? "pointer-events-none opacity-70" : ""}
         `}
+        role="button"
+        tabIndex={0}
+        aria-label="PDF dosyası yükleyin"
+        onKeyDown={(e) => {
+          if (!isLoading && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
       >
         <input
           ref={inputRef}
@@ -87,64 +97,62 @@ export function UploadZone({ onFileSelected, isLoading }: UploadZoneProps) {
           className={`
             flex items-center justify-center w-16 h-16 rounded-full
             transition-colors duration-200
-            ${isDragging ? "bg-[#2D6BE4]" : "bg-[#EEF4FF] dark:bg-[#1E3A5F]"}
+            ${isDragging ? "bg-accent-primary" : "bg-surface-soft"}
           `}
         >
           {isLoading ? (
-            <Loader2
-              className="w-8 h-8 text-[#2D6BE4] animate-spin"
-              strokeWidth={1.5}
-            />
+            <Loader2 className="w-8 h-8 text-accent-primary animate-spin" strokeWidth={1.5} />
           ) : (
             <Upload
               className={`w-8 h-8 transition-colors ${
-                isDragging ? "text-white" : "text-[#2D6BE4]"
+                isDragging ? "text-text-inverse" : "text-accent-primary"
               }`}
               strokeWidth={1.5}
             />
           )}
         </div>
 
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-1" aria-live="polite">
           {isLoading ? (
             <>
-              <p className="text-[#101828] dark:text-white" style={{ fontWeight: 600 }}>
-                Belge analiz ediliyor…
+              <p className="text-text-primary" style={{ fontWeight: 600 }}>
+                Belge analiz ediliyor...
               </p>
-              <p className="text-sm text-[#667085] dark:text-[#94A3B8]">
-                GPT-4o hukuki olayları çıkarıyor. Lütfen bekleyin.
+              <p className="text-sm text-text-muted">
+                {LEX_AI_MODEL} hukuki olayları çıkarıyor. Lütfen bekleyin.
               </p>
             </>
           ) : (
             <>
-              <p className="text-[#101828] dark:text-white" style={{ fontWeight: 600 }}>
+              <p className="text-text-primary" style={{ fontWeight: 600 }}>
                 PDF dosyanızı buraya sürükleyin
               </p>
-              <p className="text-sm text-[#667085] dark:text-[#94A3B8]">
+              <p className="text-sm text-text-muted">
                 veya{" "}
-                <span className="text-[#2D6BE4]" style={{ fontWeight: 500 }}>
+                <span className="text-text-accent" style={{ fontWeight: 500 }}>
                   dosya seçmek için tıklayın
                 </span>
               </p>
-              <p className="text-xs text-[#98A2B3] dark:text-[#64748B] pt-1">
-                Yalnızca PDF &bull; Maksimum 50 MB
-              </p>
+              <p className="text-xs text-text-subtle pt-1">Yalnızca PDF • Maksimum 50 MB</p>
             </>
           )}
         </div>
 
         {isDragging && (
-          <div className="absolute inset-0 rounded-2xl bg-[#2D6BE4]/5 pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl bg-accent-primary/5 pointer-events-none" />
         )}
       </div>
 
       {error && (
-        <div className="mt-3 flex items-center gap-2 text-sm text-[#D92D20] dark:text-[#FCA5A5] bg-[#FEF3F2] dark:bg-[#450A0A] border border-[#FECDCA] dark:border-[#7F1D1D] rounded-lg px-4 py-3">
+        <div
+          className="mt-3 flex items-center gap-2 text-sm text-text-danger bg-surface-danger border border-border-danger rounded-lg px-4 py-3"
+          role="alert"
+          aria-live="assertive"
+        >
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
-
     </div>
   );
 }

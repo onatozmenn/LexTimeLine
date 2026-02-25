@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "sample:pdf": "python scripts/generate_sample_pdf.py",
+    "screenshots:readme": "node scripts/capture_readme_screenshots.mjs"
   },
   "dependencies": {
     "@dagrejs/dagre": "^2.0.4",
@@ -68,6 +70,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
+    "playwright": "^1.58.2",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   },
