@@ -1,3 +1,13 @@
+---
+title: LexTimeline
+emoji: ⚖️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 <p align="center">
   <img src="docs/assets/lex-logo-minimal.svg" alt="LexTimeline logo" width="520" />
 </p>
